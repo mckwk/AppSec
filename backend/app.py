@@ -17,7 +17,7 @@ app.config.update({
 db.init_app(app)
 bcrypt = Bcrypt(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-CORS(app, origins=["https://app-sec-virid.vercel.app/"])
+CORS(app, origins=["https://app-sec-virid.vercel.app/", "https://pulverable-kaydence-modular.ngrok-free.dev"])
 
 def generate_activation_link(email):
     token = serializer.dumps(email, salt='email-activation')
