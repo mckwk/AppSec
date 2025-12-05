@@ -9,7 +9,7 @@ from database.models import User
 
 app = Flask(__name__)
 app.config.update({
-    'SQLALCHEMY_DATABASE_URI': f"sqlite:///{os.path.abspath('backend/database/users.db')}",
+    'SQLALCHEMY_DATABASE_URI': f"sqlite:///{os.path.abspath('database/users.db')}",
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key')
 })
