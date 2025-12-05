@@ -3,9 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppSec Frontend</title>
+    <title>AppSec Registration</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Welcome to AppSec</h1>
+    <h1>Register for AppSec</h1>
+    <form id="registration-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <label for="confirm-password">Confirm Password:</label>
+        <input type="password" id="confirm-password" name="confirm-password" required>
+
+        <label>
+            <input type="checkbox" id="marketing-consent" name="marketing-consent">
+            I agree to receive marketing emails.
+        </label>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <div id="response-message" style="margin-top: 20px; color: #333;"></div>
+
+    <script>
+        const form = document.getElementById('registration-form');
+        const responseMessage = document.getElementById('response-message');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const marketingConsent = document.getElementById('marketing-consent').checked;
+
+            if (password !== confirmPassword) {
+                responseMessage.textContent = 'Passwords do not match!';
+                responseMessage.style.color = 'red';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        marketing_acc: marketingConsent,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    responseMessage.textContent = result.message;
+                    responseMessage.style.color = 'green';
+                } else {
+                    responseMessage.textContent = result.error || 'An error occurred. Please try again later.';
+                    responseMessage.style.color = 'red';
+                }
+            } catch (error) {
+                responseMessage.textContent = 'An error occurred. Please try again later.';
+                responseMessage.style.color = 'red';
+            }
+        });
+    </script>
 </body>
 </html>
