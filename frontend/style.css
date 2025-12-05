@@ -4,6 +4,9 @@ body {
     padding: 0;
     background-color: #ffe6f2; 
     color: #5a3e4a; 
+    background-image: url('background.png');
+    background-size: 300px;
+    background-repeat: repeat;
 }
 
 h1 {
@@ -91,6 +94,6 @@ a:hover {
 #response-message {
     text-align: center;
     margin-top: 20px;
-    font-weight: bold; 
-    font-size: 1.1rem; 
+    font-weight: bold;
+    font-size: 1.1rem;
 }
