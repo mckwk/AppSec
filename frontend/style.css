@@ -4,13 +4,13 @@ body {
     padding: 0;
     background-color: #ffe6f2; 
     color: #5a3e4a; 
-    background-image: url('background2.jpg');
+    background-image: url('background.jpeg');
     background-size: 300px;
     background-repeat: repeat;
 }
 
 h1 {
-    color: #ff69b4; 
+    color: #e8b5cf; 
     text-align: center;
     margin-top: 30px;
     font-size: 2.8rem;
