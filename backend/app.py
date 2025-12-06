@@ -9,6 +9,9 @@ from database.models import User
 from mailersend import MailerSendClient, EmailBuilder
 import jinja2
 from dotenv import load_dotenv
+from flask_wtf import FlaskForm, RecaptchaField
+from wtforms import StringField, PasswordField, BooleanField, validators
+from werkzeug.datastructures import MultiDict
 
 load_dotenv()
 
@@ -16,7 +19,9 @@ app = Flask(__name__)
 app.config.update({
     'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-    'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key')
+    'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key'),
+    'RECAPTCHA_PUBLIC_KEY': os.getenv('RECAPTCHA_PUBLIC_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
+    'RECAPTCHA_PRIVATE_KEY': os.getenv('RECAPTCHA_PRIVATE_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
 })
 
 ms = MailerSendClient(api_key=os.getenv('MAILERSEND_API_KEY'))
@@ -28,6 +33,12 @@ CORS(app)
 
 template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
+
+class RegistrationForm(FlaskForm):
+    email = StringField('Email', [validators.DataRequired(), validators.Email()])
+    password = PasswordField('Password', [validators.DataRequired(), validators.Length(min=8)])
+    marketing_acc = BooleanField('Marketing Consent')
+    recaptcha = RecaptchaField()
 
 def generate_activation_link(email):
     token = serializer.dumps(email, salt=os.getenv('ACTIVATION_SALT', 'email-activation'))
@@ -89,41 +100,52 @@ def forbidden_error(error):
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    marketing_acc = data.get('marketing_acc', False)
+    if not data:
+        return jsonify({'error': 'No input data provided'}), 400
+    
+    # Create a MultiDict from the JSON data
+    form_data = MultiDict(data)
+    
+    # Initialize the form with the data
+    # Disable CSRF protection for this API endpoint as it's stateless/token-based usually, 
+    # or handled differently. For this exercise, we focus on Recaptcha.
+    form = RegistrationForm(formdata=form_data, meta={'csrf': False})
 
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required.'}), 400
+    if form.validate():
+        email = form.email.data
+        password = form.password.data
+        marketing_acc = form.marketing_acc.data
 
-    # Check if user already exists
-    if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email is already registered.'}), 400
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            return jsonify({'error': 'Email is already registered.'}), 400
 
-    # Hash the password
-    password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        # Hash the password
+        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    # Generate activation token and link
-    token, activation_link = generate_activation_link(email)
-    expiration = datetime.now() + timedelta(hours=24)
+        # Generate activation token and link
+        token, activation_link = generate_activation_link(email)
+        expiration = datetime.now() + timedelta(hours=24)
 
-    # Create user
-    user = User(
-        email=email,
-        password_hash=password_hash,
-        activation_token=token,
-        activation_expires_at=expiration,
-        ip_address=request.remote_addr,
-        user_agent=request.headers.get('User-Agent'),
-        marketing_acc=marketing_acc
-    )
-    db.session.add(user)
-    db.session.commit()
+        # Create user
+        user = User(
+            email=email,
+            password_hash=password_hash,
+            activation_token=token,
+            activation_expires_at=expiration,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent'),
+            marketing_acc=marketing_acc
+        )
+        db.session.add(user)
+        db.session.commit()
 
-    # Send activation email (placeholder)
-    send_activation_email(activation_link, email)
+        # Send activation email (placeholder)
+        send_activation_email(activation_link, email)
 
-    return jsonify({'message': 'User registered. Please check your email to activate your account.'}), 201
+        return jsonify({'message': 'User registered. Please check your email to activate your account.'}), 201
+    else:
+        return jsonify({'error': 'Invalid input or captcha.', 'details': form.errors}), 400
 
 if __name__ == '__main__':
     ensure_database_exists()

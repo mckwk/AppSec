@@ -8,6 +8,7 @@
     <script>
         const API_BASE_URL = CONFIG.API_BASE_URL;
     </script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,6 +27,9 @@
             <input type="checkbox" id="marketing-consent" name="marketing-consent">
             I agree to receive marketing emails (optional).
         </label>
+
+        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+        <br>
 
         <button type="submit">Register</button>
     </form>
@@ -63,6 +67,12 @@
             return;
             }
 
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                responseMessage.textContent = 'Please complete the captcha!';
+                responseMessage.style.color = 'red';
+                return;
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/register`, {
@@ -74,6 +84,7 @@
                         email,
                         password,
                         marketing_acc: marketingConsent,
+                        'g-recaptcha-response': recaptchaResponse
                     }),
                 });
 
