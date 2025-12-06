@@ -14,11 +14,11 @@ from itsdangerous import URLSafeTimedSerializer
 from mailersend import EmailBuilder, MailerSendClient
 from werkzeug.datastructures import MultiDict
 from wtforms import BooleanField, PasswordField, StringField, validators
+from wtforms.validators import ValidationError  
 
 from database import db
 from database.models import User
 
-# Configure logging to include timestamps and log levels
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
@@ -47,7 +47,6 @@ template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
 PEPPER = os.getenv('PEPPER', 'default_pepper')
 
-# 🆕 jednolity, bezpieczny komunikat błędu rejestracji
 GENERIC_REG_ERROR = 'Registration failed. Please check your input and captcha.'
 
 
@@ -60,7 +59,6 @@ class RegistrationForm(FlaskForm):
         ]
     )
 
-    # zaawansowana polityka hasła
     password = PasswordField(
         'Password',
         [
@@ -73,7 +71,6 @@ class RegistrationForm(FlaskForm):
         ]
     )
 
-    # potwierdzenie hasła walidowane po stronie backendu
     confirm_password = PasswordField(
         'Confirm Password',
         [
@@ -84,6 +81,17 @@ class RegistrationForm(FlaskForm):
 
     marketing_acc = BooleanField('Marketing Consent')
     recaptcha = RecaptchaField()
+
+    def validate_email(self, field):
+        blacklist = {'amu.edu.pl', 'outlook.com'}
+        try:
+            domain = field.data.split('@', 1)[1].lower()
+        except (IndexError, AttributeError):
+            return
+
+        if domain in blacklist:
+            logging.warning(f"Registration attempt with blacklisted email domain: {domain}")
+            raise ValidationError('Email domain is not allowed.')
 
 
 def generate_activation_link(email):
@@ -131,7 +139,7 @@ def activate_account(token):
         email = serializer.loads(
             token,
             salt=activation_salt,
-            max_age=86400  # 24 hours in seconds
+            max_age=86400
         )
         logging.info(f"Token decoded successfully for email: {email}")
         user = User.query.filter_by(email=email).first()
@@ -181,7 +189,6 @@ def register():
     data = request.json
     if not data:
         logging.error("No input data provided in registration request")
-        # 🆕 zawsze ten sam, bezpieczny komunikat
         return jsonify({'error': GENERIC_REG_ERROR}), 400
 
     form_data = MultiDict(data)
@@ -195,7 +202,6 @@ def register():
         logging.info(f"Registration attempt for email: {email}")
         if User.query.filter_by(email=email).first():
             logging.warning(f"Registration failed: Email {email} already exists")
-            # 🆕 nie ujawniamy, że email istnieje
             return jsonify({'error': GENERIC_REG_ERROR}), 400
 
         password_hash = bcrypt.generate_password_hash(
@@ -226,7 +232,6 @@ def register():
         ), 201
     else:
         logging.error(f"Registration failed due to invalid input: {form.errors}")
-        # 🆕 żadnych szczegółów na zewnątrz
         return jsonify(
             {
                 'error': GENERIC_REG_ERROR
