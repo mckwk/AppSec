@@ -14,7 +14,7 @@ from itsdangerous import URLSafeTimedSerializer
 from mailersend import EmailBuilder, MailerSendClient
 from werkzeug.datastructures import MultiDict
 from wtforms import BooleanField, PasswordField, StringField, validators
-from wtforms.validators import ValidationError  
+from wtforms.validators import ValidationError
 
 from database import db
 from database.models import User
@@ -232,6 +232,18 @@ def register():
         ), 201
     else:
         logging.error(f"Registration failed due to invalid input: {form.errors}")
+
+        # sprawdzamy, czy to błąd domeny z blacklisty
+        email_errors = form.errors.get('email', [])
+        domain_blacklisted = any('Email domain is not allowed.' in msg for msg in email_errors)
+
+        if domain_blacklisted:
+            return jsonify(
+                {
+                    'error': 'Email domain is not allowed.'
+                }
+            ), 400
+
         return jsonify(
             {
                 'error': GENERIC_REG_ERROR

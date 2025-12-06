@@ -152,7 +152,7 @@
                     body: JSON.stringify({
                         email,
                         password,
-                        confirm_password: confirmPassword,  
+                        confirm_password: confirmPassword,
                         marketing_acc: marketingConsent,
                         'g-recaptcha-response': recaptchaResponse
                     }),
@@ -169,7 +169,7 @@
                     if (response.status === 429) {
                         message = 'Too many registration attempts. Please try again later.';
                     } else if (result && result.error) {
-                        message = result.error;
+                        message = result.error; // np. "Email domain is not allowed."
                     }
 
                     responseMessage.textContent = message;
