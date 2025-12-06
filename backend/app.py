@@ -22,7 +22,8 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.update({
-    'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
+    #'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
+    'SQLALCHEMY_DATABASE_URI': os.environ['DATABASE_URI']
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key'),
     'RECAPTCHA_PUBLIC_KEY': os.getenv('RECAPTCHA_PUBLIC_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
@@ -78,16 +79,6 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
     except Exception as e:
         print(f"Failed to send activation email to {email}: {e}")
 
-
-def ensure_database_exists():
-    db_path = os.getenv(
-        'DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}").replace('sqlite:///', '')
-    if not os.path.exists(db_path):
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
-        with open(db_path, 'w') as f:
-            pass
-
-
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -139,7 +130,7 @@ def register():
 
         # Check if user already exists
         if User.query.filter_by(email=email).first():
-            return jsonify({'error': 'Email is already registered.'}), 400
+            return jsonify({'error': 'Registration failed.'}), 400
 
         # Hash the password
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -168,7 +159,6 @@ def register():
 
 
 if __name__ == '__main__':
-    ensure_database_exists()
     with app.app_context():
         db.create_all()
     debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() in ['true', '1', 't']
