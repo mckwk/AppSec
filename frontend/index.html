@@ -20,6 +20,12 @@
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
 
+        <!-- pasek siły hasła -->
+        <div id="password-strength-container">
+            <div id="password-strength-bar"></div>
+            <span id="password-strength-text"></span>
+        </div>
+
         <label for="confirm-password">Confirm password:</label>
         <input type="password" id="confirm-password" name="confirm-password" required>
 
@@ -40,11 +46,66 @@
         const form = document.getElementById('registration-form');
         const responseMessage = document.getElementById('response-message');
 
+        const passwordInput = document.getElementById('password');
+        const passwordStrengthBar = document.getElementById('password-strength-bar');
+        const passwordStrengthText = document.getElementById('password-strength-text');
+
+        function evaluatePasswordStrength(password) {
+            let score = 0;
+
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            let label = 'Very weak';
+            let color = '#ff4b4b';
+            let width = '20%';
+
+            if (score === 0) {
+                label = '';
+                color = '#ddd';
+                width = '0';
+            } else if (score === 1) {
+                label = 'Very weak';
+                color = '#ff4b4b';
+                width = '20%';
+            } else if (score === 2) {
+                label = 'Weak';
+                color = '#ff7f50';
+                width = '40%';
+            } else if (score === 3) {
+                label = 'Medium';
+                color = '#f0ad4e';
+                width = '60%';
+            } else if (score === 4) {
+                label = 'Strong';
+                color = '#5cb85c';
+                width = '80%';
+            } else if (score === 5) {
+                label = 'Very strong';
+                color = '#3c763d';
+                width = '100%';
+            }
+
+            return { score, label, color, width };
+        }
+
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            const { score, label, color, width } = evaluatePasswordStrength(password);
+
+            passwordStrengthBar.style.width = width;
+            passwordStrengthBar.style.backgroundColor = color;
+            passwordStrengthText.textContent = label;
+        });
+
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const password = passwordInput.value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const marketingConsent = document.getElementById('marketing-consent').checked;
 
@@ -52,19 +113,28 @@
             if (!emailRegex.test(email)) {
                 responseMessage.textContent = 'Invalid email format!';
                 responseMessage.style.color = 'red';
-            return;
+                return;
             }
 
             if (password.length < 8) {
                 responseMessage.textContent = 'Password must be at least 8 characters long!';
                 responseMessage.style.color = 'red';
-            return;
+                return;
+            }
+
+            const strength = evaluatePasswordStrength(password);
+            // wymagamy co najmniej "Strong"
+            if (strength.score < 4) {
+                responseMessage.textContent =
+                    'Password is too weak. Use upper and lower case letters, digits and special characters.';
+                responseMessage.style.color = 'red';
+                return;
             }
 
             if (password !== confirmPassword) {
                 responseMessage.textContent = 'Passwords do not match!';
                 responseMessage.style.color = 'red';
-            return;
+                return;
             }
 
             const recaptchaResponse = grecaptcha.getResponse();
@@ -83,6 +153,7 @@
                     body: JSON.stringify({
                         email,
                         password,
+                        confirm_password: confirmPassword,   // dla backendu
                         marketing_acc: marketingConsent,
                         'g-recaptcha-response': recaptchaResponse
                     }),
@@ -94,11 +165,11 @@
                     responseMessage.textContent = result.message;
                     responseMessage.style.color = 'green';
                 } else {
-                    responseMessage.textContent =  'An error occurred. Please try again later.';
+                    responseMessage.textContent = 'An error occurred. Please try again later.';
                     responseMessage.style.color = 'red';
                 }
             } catch (error) {
-                responseMessage.textContent = 'An error occurred. Please try again later. ';
+                responseMessage.textContent = 'An error occurred. Please try again later.';
                 responseMessage.style.color = 'red';
             }
         });

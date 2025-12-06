@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 
 import jinja2
 from dotenv import load_dotenv
-from flask import (Flask, jsonify, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -47,16 +46,44 @@ PEPPER = os.getenv('PEPPER', 'default_pepper')
 
 class RegistrationForm(FlaskForm):
     email = StringField(
-        'Email', [validators.DataRequired(), validators.Email()])
+        'Email',
+        [
+            validators.DataRequired(),
+            validators.Email()
+        ]
+    )
+
+    # zaawansowana polityka hasła
     password = PasswordField(
-        'Password', [validators.DataRequired(), validators.Length(min=8)])
+        'Password',
+        [
+            validators.DataRequired(),
+            validators.Length(min=8, message='Password must be at least 8 characters long.'),
+            validators.Regexp(
+                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$',
+                message='Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.'
+            ),
+        ]
+    )
+
+    # potwierdzenie hasła walidowane po stronie backendu
+    confirm_password = PasswordField(
+        'Confirm Password',
+        [
+            validators.DataRequired(),
+            validators.EqualTo('password', message='Passwords must match.')
+        ]
+    )
+
     marketing_acc = BooleanField('Marketing Consent')
     recaptcha = RecaptchaField()
 
 
 def generate_activation_link(email):
-    token = serializer.dumps(email, salt=os.getenv(
-        'ACTIVATION_SALT', 'email-activation'))
+    token = serializer.dumps(
+        email,
+        salt=os.getenv('ACTIVATION_SALT', 'email-activation')
+    )
     return token, url_for('activate_account', token=token, _external=True)
 
 
@@ -72,11 +99,12 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
                          .html(html_content)
                          .text(f"Click the link below to activate your account: {activation_link}")
                          .build())
-        response = ms.emails.send(email_content)
+        ms.emails.send(email_content)
         print(f"Activation email sent to {email}, link: {activation_link}")
     except Exception as e:
         print(
-            f"Failed to send activation email to {email}: {e}, activation link: {activation_link}")
+            f"Failed to send activation email to {email}: {e}, activation link: {activation_link}"
+        )
 
 
 @app.route('/')
@@ -87,8 +115,11 @@ def home():
 @app.route('/activate/<token>', methods=['GET'])
 def activate_account(token):
     try:
-        email = serializer.loads(token, salt=os.getenv(
-            'ACTIVATION_SALT'), max_age=3600)
+        email = serializer.loads(
+            token,
+            salt=os.getenv('ACTIVATION_SALT'),
+            max_age=3600
+        )
         user = User.query.filter_by(email=email).first()
         if user and not user.is_active:
             user.is_active = True
@@ -118,6 +149,7 @@ def register():
     data = request.json
     if not data:
         return jsonify({'error': 'No input data provided'}), 400
+
     form_data = MultiDict(data)
     form = RegistrationForm(formdata=form_data, meta={'csrf': False})
 
@@ -127,10 +159,12 @@ def register():
         marketing_acc = form.marketing_acc.data
 
         if User.query.filter_by(email=email).first():
+            # specjalnie ogólny komunikat
             return jsonify({'error': 'Registration failed.'}), 400
 
         password_hash = bcrypt.generate_password_hash(
-            password + PEPPER).decode('utf-8')
+            password + PEPPER
+        ).decode('utf-8')
 
         token, activation_link = generate_activation_link(email)
         expiration = datetime.now() + timedelta(hours=24)
@@ -148,9 +182,18 @@ def register():
         db.session.commit()
 
         send_activation_email(activation_link, email)
-        return jsonify({'message': 'User registered. Please check your email to activate your account.'}), 201
+        return jsonify(
+            {
+                'message': 'User registered. Please check your email to activate your account.'
+            }
+        ), 201
     else:
-        return jsonify({'error': 'Invalid input or captcha.', 'details': form.errors}), 400
+        return jsonify(
+            {
+                'error': 'Invalid input or captcha.',
+                'details': form.errors
+            }
+        ), 400
 
 
 if __name__ == '__main__':
