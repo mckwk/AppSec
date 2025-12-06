@@ -122,11 +122,10 @@
                 return;
             }
 
-            const strength = evaluatePasswordStrength(password);
-            // wymagamy co najmniej "Strong"
-            if (strength.score < 4) {
+            const strongPolicyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+            if (!strongPolicyRegex.test(password)) {
                 responseMessage.textContent =
-                    'Password is too weak. Use upper and lower case letters, digits and special characters.';
+                    'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.';
                 responseMessage.style.color = 'red';
                 return;
             }
@@ -153,7 +152,7 @@
                     body: JSON.stringify({
                         email,
                         password,
-                        confirm_password: confirmPassword,   // dla backendu
+                        confirm_password: confirmPassword,  
                         marketing_acc: marketingConsent,
                         'g-recaptcha-response': recaptchaResponse
                     }),
