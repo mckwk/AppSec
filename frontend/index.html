@@ -169,7 +169,7 @@
                     if (response.status === 429) {
                         message = 'Too many registration attempts. Please try again later.';
                     } else if (result && result.error) {
-                        message = result.error; // np. "Email domain is not allowed."
+                        message = result.error; 
                     }
 
                     responseMessage.textContent = message;

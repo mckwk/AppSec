@@ -233,7 +233,6 @@ def register():
     else:
         logging.error(f"Registration failed due to invalid input: {form.errors}")
 
-        # sprawdzamy, czy to błąd domeny z blacklisty
         email_errors = form.errors.get('email', [])
         domain_blacklisted = any('Email domain is not allowed.' in msg for msg in email_errors)
 
