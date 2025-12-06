@@ -23,7 +23,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config.update({
     #'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
-    'SQLALCHEMY_DATABASE_URI': os.environ['DATABASE_URI']
+    'SQLALCHEMY_DATABASE_URI': os.environ['DATABASE_URI'],
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key'),
     'RECAPTCHA_PUBLIC_KEY': os.getenv('RECAPTCHA_PUBLIC_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
