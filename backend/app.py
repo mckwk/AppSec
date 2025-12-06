@@ -198,7 +198,7 @@ def register():
         ).decode('utf-8')
 
         token, activation_link = generate_activation_link(email)
-        expiration = datetime.now() + timedelta(hours=24)
+        expiration = datetime.utcnow() + timedelta(hours=24)
 
         user = User(
             email=email,
