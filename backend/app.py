@@ -111,8 +111,6 @@ def not_found_error(error):
 def forbidden_error(error):
     return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/403.html")
 
-# Routes
-
 
 @app.route('/register', methods=['POST'])
 @limiter.limit("5 per minute")
@@ -128,19 +126,15 @@ def register():
         password = form.password.data
         marketing_acc = form.marketing_acc.data
 
-        # Check if user already exists
         if User.query.filter_by(email=email).first():
             return jsonify({'error': 'Registration failed.'}), 400
 
-        # Hash the password with the pepper
         password_hash = bcrypt.generate_password_hash(
             password + PEPPER).decode('utf-8')
 
-        # Generate activation token and link
         token, activation_link = generate_activation_link(email)
         expiration = datetime.now() + timedelta(hours=24)
 
-        # Create user
         user = User(
             email=email,
             password_hash=password_hash,
