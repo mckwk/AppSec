@@ -1,19 +1,22 @@
-from flask import Flask, request, jsonify, url_for, render_template, send_from_directory, redirect
-from flask_bcrypt import Bcrypt
-from itsdangerous import URLSafeTimedSerializer
-from datetime import datetime, timedelta
 import os
-from flask_cors import CORS
-from database import db
-from database.models import User
-from mailersend import MailerSendClient, EmailBuilder
+from datetime import datetime, timedelta
+
 import jinja2
 from dotenv import load_dotenv
-from flask_wtf import FlaskForm, RecaptchaField
-from wtforms import StringField, PasswordField, BooleanField, validators
-from werkzeug.datastructures import MultiDict
+from flask import (Flask, jsonify, redirect, render_template, request,
+                   send_from_directory, url_for)
+from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf import FlaskForm, RecaptchaField
+from itsdangerous import URLSafeTimedSerializer
+from mailersend import EmailBuilder, MailerSendClient
+from werkzeug.datastructures import MultiDict
+from wtforms import BooleanField, PasswordField, StringField, validators
+
+from database import db
+from database.models import User
 
 load_dotenv()
 
@@ -42,15 +45,21 @@ limiter = Limiter(
 template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
 
+
 class RegistrationForm(FlaskForm):
-    email = StringField('Email', [validators.DataRequired(), validators.Email()])
-    password = PasswordField('Password', [validators.DataRequired(), validators.Length(min=8)])
+    email = StringField(
+        'Email', [validators.DataRequired(), validators.Email()])
+    password = PasswordField(
+        'Password', [validators.DataRequired(), validators.Length(min=8)])
     marketing_acc = BooleanField('Marketing Consent')
     recaptcha = RecaptchaField()
 
+
 def generate_activation_link(email):
-    token = serializer.dumps(email, salt=os.getenv('ACTIVATION_SALT', 'email-activation'))
+    token = serializer.dumps(email, salt=os.getenv(
+        'ACTIVATION_SALT', 'email-activation'))
     return token, url_for('activate_account', token=token, _external=True)
+
 
 def send_activation_email(activation_link, email="placeholder@email.com"):
     try:
@@ -59,7 +68,7 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
 
         email_content = (EmailBuilder()
                          .from_email(os.getenv('MAILERSEND_FROM_EMAIL', "default@example.com"), "Hello Kitty")
-                         .to_many([{ "email": email, "name": email.split('@')[0] }])
+                         .to_many([{"email": email, "name": email.split('@')[0]}])
                          .subject("Activate Your Account")
                          .html(html_content)
                          .text(f"Click the link below to activate your account: {activation_link}")
@@ -69,21 +78,26 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
     except Exception as e:
         print(f"Failed to send activation email to {email}: {e}")
 
+
 def ensure_database_exists():
-    db_path = os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}").replace('sqlite:///', '')
+    db_path = os.getenv(
+        'DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}").replace('sqlite:///', '')
     if not os.path.exists(db_path):
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         with open(db_path, 'w') as f:
             pass
 
+
 @app.route('/')
 def home():
     return render_template('home.html')
 
+
 @app.route('/activate/<token>', methods=['GET'])
 def activate_account(token):
     try:
-        email = serializer.loads(token, salt=os.getenv('ACTIVATION_SALT'), max_age=3600)
+        email = serializer.loads(token, salt=os.getenv(
+            'ACTIVATION_SALT'), max_age=3600)
         user = User.query.filter_by(email=email).first()
         if user and not user.is_active:
             user.is_active = True
@@ -96,28 +110,26 @@ def activate_account(token):
     except Exception:
         return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/invalid_token.html")
 
+
 @app.errorhandler(404)
 def not_found_error(error):
     return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/404.html")
+
 
 @app.errorhandler(403)
 def forbidden_error(error):
     return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/403.html")
 
 # Routes
+
+
 @app.route('/register', methods=['POST'])
 @limiter.limit("5 per minute")
 def register():
     data = request.json
     if not data:
         return jsonify({'error': 'No input data provided'}), 400
-    
-    # Create a MultiDict from the JSON data
     form_data = MultiDict(data)
-    
-    # Initialize the form with the data
-    # Disable CSRF protection for this API endpoint as it's stateless/token-based usually, 
-    # or handled differently. For this exercise, we focus on Recaptcha.
     form = RegistrationForm(formdata=form_data, meta={'csrf': False})
 
     if form.validate():
@@ -149,12 +161,11 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        # Send activation email (placeholder)
         send_activation_email(activation_link, email)
-
         return jsonify({'message': 'User registered. Please check your email to activate your account.'}), 201
     else:
         return jsonify({'error': 'Invalid input or captcha.', 'details': form.errors}), 400
+
 
 if __name__ == '__main__':
     ensure_database_exists()

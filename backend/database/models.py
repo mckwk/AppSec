@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from database import db
+
 
 # Define the User model
 class User(db.Model):
