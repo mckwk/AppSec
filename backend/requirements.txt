@@ -2,3 +2,4 @@ flask
 flask-cors
 flask_bcrypt
 flask_sqlalchemy
+mailersend

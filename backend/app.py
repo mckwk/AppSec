@@ -6,6 +6,8 @@ import os
 from flask_cors import CORS
 from database import db
 from database.models import User
+from mailersend import MailerSendClient, EmailBuilder
+import jinja2
 
 app = Flask(__name__)
 app.config.update({
@@ -18,14 +20,31 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 CORS(app)
+ms = MailerSendClient(api_key='mlsn.d941592a8fbd542d299b950ca460c687622aa1ec3ad11448b5d26c9d23511bff')
+
+template_loader = jinja2.FileSystemLoader(searchpath="templates")
+template_env = jinja2.Environment(loader=template_loader)
 
 def generate_activation_link(email):
     token = serializer.dumps(email, salt='email-activation')
     return token, url_for('activate', token=token, _external=True)
 
 def send_activation_email(activation_link, email="placeholder@email.com"):
-    # Placeholder for sending email logic
-    print(f'Send activation email to {email} with link: {activation_link}')
+    try:
+        template = template_env.get_template("activation_email_template.html")
+        html_content = template.render(activation_link=activation_link)
+
+        email_content = (EmailBuilder()
+                         .from_email("MS_CBVwdk@test-dnvo4d93w59g5r86.mlsender.net", "Hello Kitty")
+                         .to_many([{"email": email, "name": email.split('@')[0]}])
+                         .subject("Activate Your Account")
+                         .html(html_content)
+                         .text(f"Click the link below to activate your account: {activation_link}")
+                         .build())
+        response = ms.emails.send(email_content)
+        print(f"Activation email sent to {email}, link: {activation_link}")
+    except Exception as e:
+        print(f"Failed to send activation email to {email}: {e}")
 
 # Routes
 @app.route('/register', methods=['POST'])
@@ -47,7 +66,7 @@ def register():
 
     # Generate activation token and link
     token, activation_link = generate_activation_link(email)
-    expiration = datetime.utcnow() + timedelta(hours=24)
+    expiration = datetime.now() + timedelta(hours=24)
 
     # Create user
     user = User(
