@@ -22,7 +22,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.update({
-    #'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
+    # 'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
     'SQLALCHEMY_DATABASE_URI': os.environ['DATABASE_URI'],
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key'),
@@ -31,20 +31,18 @@ app.config.update({
 })
 
 ms = MailerSendClient(api_key=os.getenv('MAILERSEND_API_KEY'))
-
 db.init_app(app)
 bcrypt = Bcrypt(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-CORS(app)
-
+CORS(app, resources={r"*": {"origins": "*"}})
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"]
 )
-
 template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
+PEPPER = os.getenv('PEPPER', 'default_pepper')
 
 
 class RegistrationForm(FlaskForm):
@@ -77,7 +75,9 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
         response = ms.emails.send(email_content)
         print(f"Activation email sent to {email}, link: {activation_link}")
     except Exception as e:
-        print(f"Failed to send activation email to {email}: {e}")
+        print(
+            f"Failed to send activation email to {email}: {e}, activation link: {activation_link}")
+
 
 @app.route('/')
 def home():
@@ -132,8 +132,9 @@ def register():
         if User.query.filter_by(email=email).first():
             return jsonify({'error': 'Registration failed.'}), 400
 
-        # Hash the password
-        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        # Hash the password with the pepper
+        password_hash = bcrypt.generate_password_hash(
+            password + PEPPER).decode('utf-8')
 
         # Generate activation token and link
         token, activation_link = generate_activation_link(email)
