@@ -120,7 +120,7 @@ def activate_account(token):
         email = serializer.loads(
             token,
             salt=os.getenv('ACTIVATION_SALT'),
-            max_age=3600
+            max_age=86400  # 24 hours in seconds
         )
         user = User.query.filter_by(email=email).first()
         if user and not user.is_active:
