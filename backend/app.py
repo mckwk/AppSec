@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+import logging
 
 import jinja2
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ from wtforms import BooleanField, PasswordField, StringField, validators
 
 from database import db
 from database.models import User
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
 
@@ -100,9 +102,9 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
                          .text(f"Click the link below to activate your account: {activation_link}")
                          .build())
         ms.emails.send(email_content)
-        print(f"Activation email sent to {email}, link: {activation_link}")
+        logging.info(f"Activation email sent to {email}, link: {activation_link}")
     except Exception as e:
-        print(
+        logging.error(
             f"Failed to send activation email to {email}: {e}, activation link: {activation_link}"
         )
 
