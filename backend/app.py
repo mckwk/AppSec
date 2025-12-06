@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify, url_for, render_template, send_from_directory
 from flask_bcrypt import Bcrypt
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime, timedelta
@@ -6,26 +6,68 @@ import os
 from flask_cors import CORS
 from database import db
 from database.models import User
+from mailersend import MailerSendClient, EmailBuilder
+import jinja2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config.update({
-    'SQLALCHEMY_DATABASE_URI': f"sqlite:///{os.path.abspath('database/users.db')}",
+    'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}"),
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret_key')
 })
+
+ms = MailerSendClient(api_key=os.getenv('MAILERSEND_API_KEY'))
 
 db.init_app(app)
 bcrypt = Bcrypt(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 CORS(app)
 
+template_loader = jinja2.FileSystemLoader(searchpath="templates")
+template_env = jinja2.Environment(loader=template_loader)
+
 def generate_activation_link(email):
-    token = serializer.dumps(email, salt='email-activation')
+    token = serializer.dumps(email, salt=os.getenv('ACTIVATION_SALT', 'email-activation'))
     return token, url_for('activate', token=token, _external=True)
 
 def send_activation_email(activation_link, email="placeholder@email.com"):
-    # Placeholder for sending email logic
-    print(f'Send activation email to {email} with link: {activation_link}')
+    try:
+        template = template_env.get_template("activation_email_template.html")
+        html_content = template.render(activation_link=activation_link)
+
+        email_content = (EmailBuilder()
+                         .from_email(os.getenv('MAILERSEND_FROM_EMAIL', "default@example.com"), "Hello Kitty")
+                         .to_many([{ "email": email, "name": email.split('@')[0] }])
+                         .subject("Activate Your Account")
+                         .html(html_content)
+                         .text(f"Click the link below to activate your account: {activation_link}")
+                         .build())
+        response = ms.emails.send(email_content)
+        print(f"Activation email sent to {email}, link: {activation_link}")
+    except Exception as e:
+        print(f"Failed to send activation email to {email}: {e}")
+
+def ensure_database_exists():
+    db_path = os.getenv('DATABASE_URI', f"sqlite:///{os.path.abspath('database/users.db')}").replace('sqlite:///', '')
+    if not os.path.exists(db_path):
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        with open(db_path, 'w') as f:
+            pass
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
 
 # Routes
 @app.route('/register', methods=['POST'])
@@ -47,7 +89,7 @@ def register():
 
     # Generate activation token and link
     token, activation_link = generate_activation_link(email)
-    expiration = datetime.utcnow() + timedelta(hours=24)
+    expiration = datetime.now() + timedelta(hours=24)
 
     # Create user
     user = User(
@@ -67,30 +109,28 @@ def register():
 
     return jsonify({'message': 'User registered. Please check your email to activate your account.'}), 201
 
+# Update the activate route to render a success page
 @app.route('/activate/<token>', methods=['GET'])
 def activate(token):
     try:
         email = serializer.loads(token, salt='email-activation', max_age=86400)
     except Exception:
-        return jsonify({'error': 'Invalid token.'}), 400
+        return render_template('invalid_token.html'), 400
 
     user = User.query.filter_by(email=email, activation_token=token).first()
     if not user:
-        return jsonify({'error': 'Invalid token.'}), 400
+        return render_template('invalid_token.html'), 400
 
     user.is_active = True
     user.activation_token = None
     user.activation_expires_at = None
     db.session.commit()
 
-    return jsonify({'message': 'Account activated successfully.'}), 200
-
-@app.route('/')
-def home():
-    return jsonify({"message": "Backend is running"})
+    return render_template('activation_success.html'), 200
 
 if __name__ == '__main__':
-    os.makedirs(os.path.dirname(app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')), exist_ok=True)
+    ensure_database_exists()
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() in ['true', '1', 't']
+    app.run(debug=debug_mode)
