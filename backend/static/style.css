@@ -1,0 +1,104 @@
+body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffe6f2; 
+    color: #5a3e4a; 
+    background-image: url('background.jpeg');
+    background-size: 300px;
+    background-repeat: repeat;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+h1 {
+    color: #e02786; 
+    text-align: center;
+    margin-top: 30px;
+    font-size: 2.8rem;
+    text-shadow: 2px 2px 0px #fff; 
+}
+
+form {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    background: #ffffff;
+    border: 3px solid #ffb7c5; 
+    border-radius: 25px; 
+    box-shadow: 0 8px 16px rgba(255, 105, 180, 0.2);
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #ff69b4;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: calc(100% - 24px); 
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #ffd1dc;
+    border-radius: 15px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: #ff69b4;
+}
+
+input[type="checkbox"] {
+    accent-color: #ff69b4; 
+    margin-right: 8px;
+    transform: scale(1.2);
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #ff69b4;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 0 #d44d8c; 
+}
+
+button:hover {
+    background-color: #ff1493; 
+    transform: translateY(2px); 
+    box-shadow: 0 2px 0 #d44d8c;
+}
+
+button:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+a {
+    color: #ff69b4;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+#response-message {
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}

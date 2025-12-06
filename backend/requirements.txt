@@ -3,3 +3,4 @@ flask-cors
 flask_bcrypt
 flask_sqlalchemy
 mailersend
+dotenv
