@@ -47,6 +47,9 @@ template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
 PEPPER = os.getenv('PEPPER', 'default_pepper')
 
+# 🆕 jednolity, bezpieczny komunikat błędu rejestracji
+GENERIC_REG_ERROR = 'Registration failed. Please check your input and captcha.'
+
 
 class RegistrationForm(FlaskForm):
     email = StringField(
@@ -178,7 +181,8 @@ def register():
     data = request.json
     if not data:
         logging.error("No input data provided in registration request")
-        return jsonify({'error': 'No input data provided'}), 400
+        # 🆕 zawsze ten sam, bezpieczny komunikat
+        return jsonify({'error': GENERIC_REG_ERROR}), 400
 
     form_data = MultiDict(data)
     form = RegistrationForm(formdata=form_data, meta={'csrf': False})
@@ -191,7 +195,8 @@ def register():
         logging.info(f"Registration attempt for email: {email}")
         if User.query.filter_by(email=email).first():
             logging.warning(f"Registration failed: Email {email} already exists")
-            return jsonify({'error': 'Registration failed.'}), 400
+            # 🆕 nie ujawniamy, że email istnieje
+            return jsonify({'error': GENERIC_REG_ERROR}), 400
 
         password_hash = bcrypt.generate_password_hash(
             password + PEPPER
@@ -221,10 +226,10 @@ def register():
         ), 201
     else:
         logging.error(f"Registration failed due to invalid input: {form.errors}")
+        # 🆕 żadnych szczegółów na zewnątrz
         return jsonify(
             {
-                'error': 'Invalid input or captcha.',
-                'details': form.errors
+                'error': GENERIC_REG_ERROR
             }
         ), 400
 

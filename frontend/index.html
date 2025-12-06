@@ -164,9 +164,18 @@
                     responseMessage.textContent = result.message;
                     responseMessage.style.color = 'green';
                 } else {
-                    responseMessage.textContent = 'An error occurred. Please try again later.';
+                    let message = 'An error occurred. Please try again later.';
+
+                    if (response.status === 429) {
+                        message = 'Too many registration attempts. Please try again later.';
+                    } else if (result && result.error) {
+                        message = result.error;
+                    }
+
+                    responseMessage.textContent = message;
                     responseMessage.style.color = 'red';
                 }
+
             } catch (error) {
                 responseMessage.textContent = 'An error occurred. Please try again later.';
                 responseMessage.style.color = 'red';
