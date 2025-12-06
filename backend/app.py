@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, url_for, render_template, send_from_directory
+from flask import Flask, request, jsonify, url_for, render_template, send_from_directory, redirect
 from flask_bcrypt import Bcrypt
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime, timedelta
@@ -31,7 +31,7 @@ template_env = jinja2.Environment(loader=template_loader)
 
 def generate_activation_link(email):
     token = serializer.dumps(email, salt=os.getenv('ACTIVATION_SALT', 'email-activation'))
-    return token, url_for('activate', token=token, _external=True)
+    return token, url_for('activate_account', token=token, _external=True)
 
 def send_activation_email(activation_link, email="placeholder@email.com"):
     try:
@@ -61,13 +61,29 @@ def ensure_database_exists():
 def home():
     return render_template('home.html')
 
+@app.route('/activate/<token>', methods=['GET'])
+def activate_account(token):
+    try:
+        email = serializer.loads(token, salt=os.getenv('ACTIVATION_SALT'), max_age=3600)
+        user = User.query.filter_by(email=email).first()
+        if user and not user.is_active:
+            user.is_active = True
+            user.activation_token = None
+            user.activation_expires_at = None
+            db.session.commit()
+            return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/activation_success.html")
+        else:
+            return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/invalid_token.html")
+    except Exception:
+        return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/invalid_token.html")
+
 @app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
+def not_found_error(error):
+    return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/404.html")
 
 @app.errorhandler(403)
-def forbidden(e):
-    return render_template('403.html'), 403
+def forbidden_error(error):
+    return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/403.html")
 
 # Routes
 @app.route('/register', methods=['POST'])
@@ -108,25 +124,6 @@ def register():
     send_activation_email(activation_link, email)
 
     return jsonify({'message': 'User registered. Please check your email to activate your account.'}), 201
-
-# Update the activate route to render a success page
-@app.route('/activate/<token>', methods=['GET'])
-def activate(token):
-    try:
-        email = serializer.loads(token, salt='email-activation', max_age=86400)
-    except Exception:
-        return render_template('invalid_token.html'), 400
-
-    user = User.query.filter_by(email=email, activation_token=token).first()
-    if not user:
-        return render_template('invalid_token.html'), 400
-
-    user.is_active = True
-    user.activation_token = None
-    user.activation_expires_at = None
-    db.session.commit()
-
-    return render_template('activation_success.html'), 200
 
 if __name__ == '__main__':
     ensure_database_exists()
