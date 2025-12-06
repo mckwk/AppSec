@@ -117,18 +117,25 @@ def home():
 @app.route('/activate/<token>', methods=['GET'])
 def activate_account(token):
     try:
+        activation_salt = os.getenv('ACTIVATION_SALT', 'email-activation')
         email = serializer.loads(
             token,
-            salt=os.getenv('ACTIVATION_SALT'),
+            salt=activation_salt,
             max_age=86400  # 24 hours in seconds
         )
         user = User.query.filter_by(email=email).first()
-        if user and not user.is_active:
-            user.is_active = True
-            user.activation_token = None
-            user.activation_expires_at = None
-            db.session.commit()
-            return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/activation_success.html")
+        if user and user.activation_token == token:
+            if user.activation_expires_at and user.activation_expires_at > datetime.utcnow():
+                if not user.is_active:
+                    user.is_active = True
+                    user.activation_token = None
+                    user.activation_expires_at = None
+                    db.session.commit()
+                    return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/activation_success.html")
+                else:
+                    return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/invalid_token.html")
+            else:
+                return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/invalid_token.html")
         else:
             return redirect(f"{os.getenv('TEMPLATE_BASE_URL')}/templates/invalid_token.html")
     except Exception:
