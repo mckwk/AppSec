@@ -41,7 +41,7 @@
             const marketingConsent = document.getElementById('marketing-consent').checked;
 
             const emailRegex = /.+@.+\..+/;
-                if (!emailRegex.test(email)) {
+            if (!emailRegex.test(email)) {
                 responseMessage.textContent = 'Invalid email format!';
                 responseMessage.style.color = 'red';
             return;
@@ -51,7 +51,7 @@
                 responseMessage.textContent = 'Password must be at least 8 characters long!';
                 responseMessage.style.color = 'red';
             return;
-}
+            }
 
             if (password !== confirmPassword) {
                 responseMessage.textContent = 'Passwords do not match!';
