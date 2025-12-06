@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 from flask_wtf import FlaskForm, RecaptchaField
 from wtforms import StringField, PasswordField, BooleanField, validators
 from werkzeug.datastructures import MultiDict
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 load_dotenv()
 
@@ -30,6 +32,12 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 CORS(app)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
@@ -98,6 +106,7 @@ def forbidden_error(error):
 
 # Routes
 @app.route('/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def register():
     data = request.json
     if not data:
