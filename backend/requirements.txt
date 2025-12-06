@@ -6,3 +6,4 @@ mailersend
 dotenv
 flask-wtf
 email-validator
+pymysql
