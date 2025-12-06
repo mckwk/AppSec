@@ -31,7 +31,7 @@ template_env = jinja2.Environment(loader=template_loader)
 
 def generate_activation_link(email):
     token = serializer.dumps(email, salt=os.getenv('ACTIVATION_SALT', 'email-activation'))
-    return token, url_for('activate', token=token, _external=True)
+    return token, url_for('activate_account', token=token, _external=True)
 
 def send_activation_email(activation_link, email="placeholder@email.com"):
     try:
