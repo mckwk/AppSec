@@ -102,3 +102,30 @@ a:hover {
     font-weight: bold;
     font-size: 1.1rem;
 }
+
+#password-strength-container {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+#password-strength-bar {
+    height: 6px;
+    width: 0;
+    max-width: 100%;
+    border-radius: 4px;
+    background-color: #ddd;
+    transition: width 0.2s ease-out, background-color 0.2s ease-out;
+}
+
+#password-strength-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.9rem;
+}
+
+.g-recaptcha {
+    display: flex;
+    justify-content: center; 
+    margin-top: 15px;        
+    margin-bottom: 15px;     
+}
