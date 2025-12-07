@@ -45,7 +45,7 @@ limiter = Limiter(
 )
 template_loader = jinja2.FileSystemLoader(searchpath="templates")
 template_env = jinja2.Environment(loader=template_loader)
-PEPPER = os.getenv('PEPPER', 'default_pepper')
+PEPPER = os.getenv('PEPPER', '')
 
 GENERIC_REG_ERROR = 'Registration failed. Please check your input and captcha.'
 
