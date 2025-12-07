@@ -117,3 +117,10 @@ a:hover {
     margin-top: 4px;
     font-size: 0.9rem;
 }
+
+.g-recaptcha {
+    display: flex;
+    justify-content: center; 
+    margin-top: 15px;        
+    margin-bottom: 15px;     
+}
