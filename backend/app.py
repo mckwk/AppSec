@@ -39,7 +39,6 @@ def template_redirect(template_name):
     base_url = os.getenv('TEMPLATE_BASE_URL', '/')
     return redirect(f"{base_url}/templates/{template_name}")
 
-# Routes
 
 @app.route('/')
 def home():
