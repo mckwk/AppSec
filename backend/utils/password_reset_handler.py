@@ -66,8 +66,11 @@ def request_password_reset(email):
     db.session.add(password_reset)
     db.session.commit()
     
+    # Generate reset link using TEMPLATE_BASE_URL (same as activation links)
+    base_url = os.getenv('TEMPLATE_BASE_URL', 'http://localhost:5000')
+    reset_link = f"{base_url}/password_reset_confirm.html?token={token}"
+    
     # Send email with plaintext token
-    reset_link = f"{os.getenv('FRONTEND_BASE_URL', 'http://localhost:5000')}/password_reset_confirm.html?token={token}"
     send_password_reset_email(reset_link, email)
     
     logging.info(f"Password reset token generated for: {email}")
@@ -135,7 +138,7 @@ def render_email_template(template_name, **kwargs):
 
 
 def send_password_reset_email(reset_link, email):
-    """Send password reset email."""
+    """Send password reset email. Prints link to console if email fails."""
     try:
         logging.info(f"Sending password reset email to: {email}")
         
@@ -152,4 +155,10 @@ def send_password_reset_email(reset_link, email):
         ms.emails.send(email_content)
         logging.info(f"Password reset email successfully sent to {email}")
     except Exception as e:
-        logging.error(f"Failed to send password reset email to {email}: {e}, reset link: {reset_link}")
+        logging.error(f"Failed to send password reset email to {email}: {e}")
+        # Print the reset link to console for development/debugging
+        print(f"\n{'='*60}")
+        print(f"PASSWORD RESET LINK (email failed to send):")
+        print(f"{reset_link}")
+        print(f"{'='*60}\n")
+        logging.info(f"Password reset link printed to console: {reset_link}")
