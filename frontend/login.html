@@ -172,6 +172,10 @@
                         localStorage.setItem('session_id', result.session_id);
                     }
 
+                    // Play meow sound! 🐱
+                    const meow = new Audio('static/meow.mp3');
+                    meow.play().catch(e => console.log('Audio play failed:', e));
+
                     responseMessage.textContent = 'Login successful! Redirecting...';
                     responseMessage.className = 'success-message';
 
@@ -226,6 +230,10 @@
                     if (result.session_id) {
                         localStorage.setItem('session_id', result.session_id);
                     }
+
+                    // Play meow sound! 🐱
+                    const meow = new Audio('static/meow.mp3');
+                    meow.play().catch(e => console.log('Audio play failed:', e));
 
                     responseMessage.textContent = 'Login successful! Redirecting...';
                     responseMessage.className = 'success-message';
