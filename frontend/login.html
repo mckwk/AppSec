@@ -67,16 +67,17 @@
     </form>
 
     <!-- MFA Verification Form (shown when MFA is required) -->
-    <form id="mfa-form" style="display: none;">
+    <form id="mfa-form" style="display: none; text-align: center;">
         <div style="text-align: center; margin-bottom: 20px;">
             <span style="font-size: 3rem;">🔐</span>
             <h2 style="margin: 10px 0;">Two-Factor Authentication</h2>
             <p>Enter the 6-digit code from your authenticator app</p>
         </div>
 
-        <label for="mfa-code">Authentication Code:</label>
+        <label for="mfa-code" style="display: block; text-align: center;">Authentication Code:</label>
         <input type="text" id="mfa-code" name="mfa-code" maxlength="6"
-            style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem;" placeholder="000000" required>
+            style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem; margin: 0 auto; display: block;"
+            placeholder="000000" required>
 
         <button type="submit">Verify</button>
 
