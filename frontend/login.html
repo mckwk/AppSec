@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - HelloKittyCMS</title>
+    <script src="config.js"></script>
+    <script>
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        .form-links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+
+        .form-links a {
+            display: block;
+            margin: 8px 0;
+        }
+
+        .error-message {
+            color: #e02786;
+            background-color: #ffe6f2;
+            border: 2px solid #ffb7c5;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .success-message {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🐱 Login to HelloKittyCMS</h1>
+    <form id="login-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+
+        <button type="submit">Login</button>
+
+        <div class="form-links">
+            <a href="password_reset_request.html">Forgot your password?</a>
+            <a href="index.html">Don't have an account? Register</a>
+        </div>
+    </form>
+
+    <div id="response-message"></div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const responseMessage = document.getElementById('response-message');
+
+        // Check if already logged in
+        fetch(`${API_BASE_URL}/check-session`, {
+            credentials: 'include'
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.valid) {
+                    window.location.href = 'dashboard.html';
+                }
+            })
+            .catch(err => console.log('Session check failed:', err));
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            responseMessage.textContent = '';
+            responseMessage.className = '';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Basic validation
+            const emailRegex = /.+@.+\..+/;
+            if (!emailRegex.test(email)) {
+                responseMessage.textContent = 'Invalid email format!';
+                responseMessage.className = 'error-message';
+                return;
+            }
+
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                responseMessage.textContent = 'Please complete the captcha!';
+                responseMessage.className = 'error-message';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        'g-recaptcha-response': recaptchaResponse
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    responseMessage.textContent = 'Login successful! Redirecting...';
+                    responseMessage.className = 'success-message';
+
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    let message = result.error || 'Login failed. Please try again.';
+
+                    if (response.status === 429) {
+                        message = 'Too many login attempts. Please try again later.';
+                    }
+
+                    responseMessage.textContent = message;
+                    responseMessage.className = 'error-message';
+                    grecaptcha.reset();
+                }
+
+            } catch (error) {
+                responseMessage.textContent = 'An error occurred. Please try again later.';
+                responseMessage.className = 'error-message';
+                grecaptcha.reset();
+            }
+        });
+    </script>
+</body>
+
+</html>

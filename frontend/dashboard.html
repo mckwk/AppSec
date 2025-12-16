@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - HelloKittyCMS</title>
+    <script src="config.js"></script>
+    <script>
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+    </script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        .dashboard-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #ffffff;
+            border: 3px solid #ffb7c5;
+            border-radius: 25px;
+            box-shadow: 0 8px 16px rgba(255, 105, 180, 0.2);
+            text-align: center;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #ffe6f2, #fff0f5);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff69b4, #e02786);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+
+        .user-email {
+            font-size: 1.2rem;
+            color: #5a3e4a;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .welcome-message {
+            font-size: 1.5rem;
+            color: #ff69b4;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #ff69b4;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .nav-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff69b4, #e02786);
+            color: white !important;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .nav-link:hover {
+            transform: scale(1.05);
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎀 HelloKittyCMS Dashboard</h1>
+
+    <div id="loading" class="loading">
+        Loading...
+    </div>
+
+    <div id="dashboard-container" class="dashboard-container" style="display: none;">
+        <div class="welcome-message">Welcome back! 🐱</div>
+
+        <div class="user-info">
+            <div class="user-avatar">👤</div>
+            <div class="user-email" id="user-email">Loading...</div>
+            <span class="status-badge status-active">✓ Active Account</span>
+        </div>
+
+        <div class="nav-links">
+            <a href="#" class="nav-link">📝 Manage Content</a>
+            <a href="#" class="nav-link">⚙️ Settings</a>
+            <a href="#" class="nav-link">📊 Analytics</a>
+        </div>
+
+        <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+    </div>
+
+    <div id="not-logged-in" style="display: none; text-align: center; padding: 40px;">
+        <h2>Not Logged In</h2>
+        <p>Please <a href="login.html">login</a> to access the dashboard.</p>
+    </div>
+
+    <script>
+        const loading = document.getElementById('loading');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const notLoggedIn = document.getElementById('not-logged-in');
+        const userEmailElement = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Check session and get user info
+        fetch(`${API_BASE_URL}/me`, {
+            credentials: 'include'
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Not authenticated');
+                }
+                return res.json();
+            })
+            .then(data => {
+                loading.style.display = 'none';
+                dashboardContainer.style.display = 'block';
+                userEmailElement.textContent = data.user.email;
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                notLoggedIn.style.display = 'block';
+            });
+
+        // Logout handler
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    window.location.href = 'login.html';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                alert('An error occurred during logout.');
+            }
+        });
+    </script>
+</body>
+
+</html>

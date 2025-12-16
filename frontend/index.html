@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <link rel="stylesheet" href="static/style.css">
 </head>
+
 <body>
     <h1>Register for HelloKittyCMS</h1>
     <form id="registration-form">
@@ -36,6 +38,10 @@
         <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
 
         <button type="submit">Register</button>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="login.html">Already have an account? Login</a>
+        </div>
     </form>
 
     <div id="response-message" style="margin-top: 20px; color: #333;"></div>
@@ -161,7 +167,7 @@
                 if (response.ok) {
                     responseMessage.textContent = result.message;
                     responseMessage.style.color = 'green';
-                    
+
                     // Play meow sound on successful registration
                     const meowSound = new Audio('static/meow.mp3');
                     meowSound.play().catch(err => console.log('Sound play failed:', err));
@@ -171,7 +177,7 @@
                     if (response.status === 429) {
                         message = 'Too many registration attempts. Please try again later.';
                     } else if (result && result.error) {
-                        message = result.error; 
+                        message = result.error;
                     }
 
                     responseMessage.textContent = message;
@@ -185,4 +191,5 @@
         });
     </script>
 </body>
+
 </html>
