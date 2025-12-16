@@ -101,6 +101,17 @@ a:hover {
     margin-top: 20px;
     font-weight: bold;
     font-size: 1.1rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 15px 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#response-message:empty {
+    display: none;
 }
 
 #password-strength-container {
