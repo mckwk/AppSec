@@ -161,6 +161,10 @@
                 if (response.ok) {
                     responseMessage.textContent = result.message;
                     responseMessage.style.color = 'green';
+                    
+                    // Play meow sound on successful registration
+                    const meowSound = new Audio('static/meow.mp3');
+                    meowSound.play().catch(err => console.log('Sound play failed:', err));
                 } else {
                     let message = 'An error occurred. Please try again later.';
 
