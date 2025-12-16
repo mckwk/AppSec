@@ -2,8 +2,8 @@ body {
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #ffe6f2; 
-    color: #5a3e4a; 
+    background-color: #ffe6f2;
+    color: #5a3e4a;
     background-image: url('background.jpeg');
     background-size: 300px;
     background-repeat: repeat;
@@ -15,11 +15,63 @@ body {
 }
 
 h1 {
-    color: #e02786; 
     text-align: center;
     margin-top: 30px;
     font-size: 2.8rem;
-    text-shadow: 2px 2px 0px #fff; 
+    font-weight: bold;
+
+    /* Animated gradient text */
+    background: linear-gradient(90deg,
+            #ff69b4,
+            #ff1493,
+            #e02786,
+            #ff69b4,
+            #ffb6c1,
+            #ff69b4);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    /* Shimmer animation */
+    animation: shimmer 3s ease-in-out infinite, float 4s ease-in-out infinite;
+
+    /* Glow effect */
+    filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.5)) drop-shadow(0 0 20px rgba(255, 20, 147, 0.3)) drop-shadow(2px 2px 0px white);
+
+    /* Smooth transitions */
+    transition: transform 0.3s ease;
+}
+
+h1:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 15px rgba(255, 105, 180, 0.7)) drop-shadow(0 0 30px rgba(255, 20, 147, 0.5)) drop-shadow(2px 2px 0px white);
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    50% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 form {
@@ -27,8 +79,8 @@ form {
     margin: 50px auto;
     padding: 30px;
     background: #ffffff;
-    border: 3px solid #ffb7c5; 
-    border-radius: 25px; 
+    border: 3px solid #ffb7c5;
+    border-radius: 25px;
     box-shadow: 0 8px 16px rgba(255, 105, 180, 0.2);
 }
 
@@ -41,7 +93,7 @@ label {
 
 input[type="email"],
 input[type="password"] {
-    width: calc(100% - 24px); 
+    width: calc(100% - 24px);
     padding: 12px;
     margin-bottom: 20px;
     border: 2px solid #ffd1dc;
@@ -57,7 +109,7 @@ input[type="password"]:focus {
 }
 
 input[type="checkbox"] {
-    accent-color: #ff69b4; 
+    accent-color: #ff69b4;
     margin-right: 8px;
     transform: scale(1.2);
 }
@@ -73,12 +125,12 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 0 #d44d8c; 
+    box-shadow: 0 4px 0 #d44d8c;
 }
 
 button:hover {
-    background-color: #ff1493; 
-    transform: translateY(2px); 
+    background-color: #ff1493;
+    transform: translateY(2px);
     box-shadow: 0 2px 0 #d44d8c;
 }
 
@@ -136,7 +188,7 @@ a:hover {
 
 .g-recaptcha {
     display: flex;
-    justify-content: center; 
-    margin-top: 15px;        
-    margin-bottom: 15px;     
+    justify-content: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
