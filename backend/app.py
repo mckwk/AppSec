@@ -74,9 +74,24 @@ def clear_session_cookie(response):
     return response
 
 
-def get_current_user():
-    """Get current user from session cookie."""
+def get_session_id_from_request():
+    """Get session ID from cookie or Authorization header."""
+    # First try cookie
     session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    if session_id:
+        return session_id
+    
+    # Then try Authorization header (for cross-origin requests)
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        return auth_header[7:]  # Remove 'Bearer ' prefix
+    
+    return None
+
+
+def get_current_user():
+    """Get current user from session cookie or Authorization header."""
+    session_id = get_session_id_from_request()
     if not session_id:
         return None
     return get_session_user(session_id)
@@ -115,6 +130,11 @@ def login():
     data = request.json
     
     response_data, status, session_id = handle_login(data)
+    
+    # Add session_id to response for cross-origin token-based auth
+    if session_id:
+        response_data['session_id'] = session_id
+    
     response = make_response(jsonify(response_data), status)
     
     if session_id:
@@ -127,7 +147,7 @@ def login():
 @app.route('/logout', methods=['POST'])
 def logout():
     logging.info("Logout route accessed")
-    session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    session_id = get_session_id_from_request()
     
     if session_id:
         destroy_session(session_id)
@@ -158,7 +178,7 @@ def get_current_user_info():
 @app.route('/check-session', methods=['GET'])
 def check_session():
     """Check if current session is valid."""
-    session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    session_id = get_session_id_from_request()
     
     if not session_id:
         return jsonify({'valid': False}), 200

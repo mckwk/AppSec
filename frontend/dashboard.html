@@ -146,41 +146,62 @@
         const userEmailElement = document.getElementById('user-email');
         const logoutBtn = document.getElementById('logout-btn');
 
-        // Check session and get user info
-        fetch(`${API_BASE_URL}/me`, {
-            credentials: 'include'
-        })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Not authenticated');
-                }
-                return res.json();
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_id');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        // Check if we have a token
+        const sessionToken = localStorage.getItem('session_id');
+        if (!sessionToken) {
+            loading.style.display = 'none';
+            notLoggedIn.style.display = 'block';
+        } else {
+            // Check session and get user info
+            fetch(`${API_BASE_URL}/me`, {
+                credentials: 'include',
+                headers: getAuthHeaders()
             })
-            .then(data => {
-                loading.style.display = 'none';
-                dashboardContainer.style.display = 'block';
-                userEmailElement.textContent = data.user.email;
-            })
-            .catch(err => {
-                loading.style.display = 'none';
-                notLoggedIn.style.display = 'block';
-            });
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Not authenticated');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    loading.style.display = 'none';
+                    dashboardContainer.style.display = 'block';
+                    userEmailElement.textContent = data.user.email;
+                })
+                .catch(err => {
+                    // Clear invalid token
+                    localStorage.removeItem('session_id');
+                    loading.style.display = 'none';
+                    notLoggedIn.style.display = 'block';
+                });
+        }
 
         // Logout handler
         logoutBtn.addEventListener('click', async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/logout`, {
                     method: 'POST',
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers: getAuthHeaders()
                 });
+
+                // Clear token regardless of response
+                localStorage.removeItem('session_id');
 
                 if (response.ok) {
                     window.location.href = 'login.html';
                 } else {
-                    alert('Logout failed. Please try again.');
+                    window.location.href = 'login.html';
                 }
             } catch (error) {
-                alert('An error occurred during logout.');
+                localStorage.removeItem('session_id');
+                window.location.href = 'login.html';
             }
         });
     </script>

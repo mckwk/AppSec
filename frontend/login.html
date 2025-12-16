@@ -70,17 +70,30 @@
         const form = document.getElementById('login-form');
         const responseMessage = document.getElementById('response-message');
 
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_id');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
         // Check if already logged in
-        fetch(`${API_BASE_URL}/check-session`, {
-            credentials: 'include'
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.valid) {
-                    window.location.href = 'dashboard.html';
-                }
+        const existingToken = localStorage.getItem('session_id');
+        if (existingToken) {
+            fetch(`${API_BASE_URL}/check-session`, {
+                credentials: 'include',
+                headers: getAuthHeaders()
             })
-            .catch(err => console.log('Session check failed:', err));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.valid) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Token invalid, clear it
+                        localStorage.removeItem('session_id');
+                    }
+                })
+                .catch(err => console.log('Session check failed:', err));
+        }
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -122,6 +135,11 @@
                 const result = await response.json();
 
                 if (response.ok) {
+                    // Store session token in localStorage for cross-origin auth
+                    if (result.session_id) {
+                        localStorage.setItem('session_id', result.session_id);
+                    }
+
                     responseMessage.textContent = 'Login successful! Redirecting...';
                     responseMessage.className = 'success-message';
 
