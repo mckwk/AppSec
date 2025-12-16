@@ -16,6 +16,9 @@ class User(db.Model):
     marketing_acc = db.Column(db.Boolean, default=False)
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
+    # MFA fields
+    mfa_enabled = db.Column(db.Boolean, default=False)
+    totp_secret = db.Column(db.String(32), nullable=True)  # Base32 encoded secret
 
 
 class Session(db.Model):

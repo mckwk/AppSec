@@ -47,6 +47,8 @@
 
 <body>
     <h1>🐱 Login to HelloKittyCMS</h1>
+
+    <!-- Login Form -->
     <form id="login-form">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required>
@@ -64,11 +66,33 @@
         </div>
     </form>
 
+    <!-- MFA Verification Form (shown when MFA is required) -->
+    <form id="mfa-form" style="display: none;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span style="font-size: 3rem;">🔐</span>
+            <h2 style="margin: 10px 0;">Two-Factor Authentication</h2>
+            <p>Enter the 6-digit code from your authenticator app</p>
+        </div>
+
+        <label for="mfa-code">Authentication Code:</label>
+        <input type="text" id="mfa-code" name="mfa-code" maxlength="6"
+            style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem;" placeholder="000000" required>
+
+        <button type="submit">Verify</button>
+
+        <div class="form-links">
+            <a href="#" id="back-to-login">← Back to Login</a>
+        </div>
+    </form>
+
     <div id="response-message"></div>
 
     <script>
-        const form = document.getElementById('login-form');
+        const loginForm = document.getElementById('login-form');
+        const mfaForm = document.getElementById('mfa-form');
         const responseMessage = document.getElementById('response-message');
+
+        let currentMfaToken = null;
 
         // Helper function to get auth headers
         function getAuthHeaders() {
@@ -88,14 +112,14 @@
                     if (data.valid) {
                         window.location.href = 'dashboard.html';
                     } else {
-                        // Token invalid, clear it
                         localStorage.removeItem('session_id');
                     }
                 })
                 .catch(err => console.log('Session check failed:', err));
         }
 
-        form.addEventListener('submit', async (event) => {
+        // Login form submit
+        loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             responseMessage.textContent = '';
             responseMessage.className = '';
@@ -103,7 +127,6 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // Basic validation
             const emailRegex = /.+@.+\..+/;
             if (!emailRegex.test(email)) {
                 responseMessage.textContent = 'Invalid email format!';
@@ -121,9 +144,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
                         email,
@@ -135,7 +156,17 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Store session token in localStorage for cross-origin auth
+                    // Check if MFA is required
+                    if (result.mfa_required) {
+                        currentMfaToken = result.mfa_token;
+                        loginForm.style.display = 'none';
+                        mfaForm.style.display = 'block';
+                        responseMessage.textContent = '';
+                        document.getElementById('mfa-code').focus();
+                        return;
+                    }
+
+                    // No MFA - login complete
                     if (result.session_id) {
                         localStorage.setItem('session_id', result.session_id);
                     }
@@ -143,17 +174,14 @@
                     responseMessage.textContent = 'Login successful! Redirecting...';
                     responseMessage.className = 'success-message';
 
-                    // Redirect to dashboard
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 1000);
                 } else {
                     let message = result.error || 'Login failed. Please try again.';
-
                     if (response.status === 429) {
                         message = 'Too many login attempts. Please try again later.';
                     }
-
                     responseMessage.textContent = message;
                     responseMessage.className = 'error-message';
                     grecaptcha.reset();
@@ -164,6 +192,67 @@
                 responseMessage.className = 'error-message';
                 grecaptcha.reset();
             }
+        });
+
+        // MFA form submit
+        mfaForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            responseMessage.textContent = '';
+            responseMessage.className = '';
+
+            const code = document.getElementById('mfa-code').value.trim();
+
+            if (!code || code.length !== 6) {
+                responseMessage.textContent = 'Please enter a 6-digit code';
+                responseMessage.className = 'error-message';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/mfa/verify-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        mfa_token: currentMfaToken,
+                        code: code
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.session_id) {
+                        localStorage.setItem('session_id', result.session_id);
+                    }
+
+                    responseMessage.textContent = 'Login successful! Redirecting...';
+                    responseMessage.className = 'success-message';
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    responseMessage.textContent = result.error || 'Invalid MFA code';
+                    responseMessage.className = 'error-message';
+                    document.getElementById('mfa-code').value = '';
+                }
+
+            } catch (error) {
+                responseMessage.textContent = 'An error occurred. Please try again.';
+                responseMessage.className = 'error-message';
+            }
+        });
+
+        // Back to login link
+        document.getElementById('back-to-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            currentMfaToken = null;
+            mfaForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            document.getElementById('mfa-code').value = '';
+            responseMessage.textContent = '';
+            grecaptcha.reset();
         });
     </script>
 </body>

@@ -7,3 +7,6 @@ dotenv
 flask-wtf
 email-validator
 pymysql
+flask-limiter
+pyotp
+qrcode[pil]

@@ -11,9 +11,10 @@ from werkzeug.datastructures import MultiDict
 from database import db
 from utils.activation_handler import activate_user_account
 from utils.registration_handler import handle_registration
-from utils.login_handler import handle_login
+from utils.login_handler import handle_login, complete_mfa_login
 from utils.session_handler import validate_session, destroy_session, get_session_user
 from utils.password_reset_handler import request_password_reset, complete_password_reset, validate_reset_token
+from utils.mfa_handler import setup_mfa, enable_mfa, disable_mfa, check_mfa_required
 from password_reset_form import PasswordResetRequestForm, PasswordResetConfirmForm
 
 logging.basicConfig(level=logging.INFO,
@@ -170,7 +171,8 @@ def get_current_user_info():
         'user': {
             'id': user.id,
             'email': user.email,
-            'is_active': user.is_active
+            'is_active': user.is_active,
+            'mfa_enabled': user.mfa_enabled
         }
     }), 200
 
@@ -185,6 +187,92 @@ def check_session():
     
     user_id = validate_session(session_id)
     return jsonify({'valid': user_id is not None}), 200
+
+
+# ==================== MFA ROUTES ====================
+
+@app.route('/mfa/setup', methods=['POST'])
+def mfa_setup():
+    """Initialize MFA setup - returns QR code and secret."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    if user.mfa_enabled:
+        return jsonify({'error': 'MFA is already enabled'}), 400
+    
+    response, error, status = setup_mfa(user.id)
+    if error:
+        return jsonify(error), status
+    
+    return jsonify(response), status
+
+
+@app.route('/mfa/enable', methods=['POST'])
+def mfa_enable():
+    """Enable MFA after verifying code."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    if not data or 'secret' not in data or 'code' not in data:
+        return jsonify({'error': 'Secret and code are required'}), 400
+    
+    response, status = enable_mfa(user.id, data['secret'], data['code'])
+    return jsonify(response), status
+
+
+@app.route('/mfa/disable', methods=['POST'])
+def mfa_disable():
+    """Disable MFA (requires valid code)."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    if not data or 'code' not in data:
+        return jsonify({'error': 'MFA code is required'}), 400
+    
+    response, status = disable_mfa(user.id, data['code'])
+    return jsonify(response), status
+
+
+@app.route('/mfa/verify-login', methods=['POST'])
+@limiter.limit("5 per minute")
+def mfa_verify_login():
+    """Verify MFA code during login."""
+    logging.info("MFA verify-login route accessed")
+    data = request.json
+    
+    if not data or 'mfa_token' not in data or 'code' not in data:
+        return jsonify({'error': 'MFA token and code are required'}), 400
+    
+    response_data, status, session_id = complete_mfa_login(data['mfa_token'], data['code'])
+    
+    # Add session_id to response for cross-origin token-based auth
+    if session_id:
+        response_data['session_id'] = session_id
+    
+    response = make_response(jsonify(response_data), status)
+    
+    if session_id:
+        set_session_cookie(response, session_id)
+        logging.info("Session cookie set after MFA verification")
+    
+    return response
+
+
+@app.route('/mfa/status', methods=['GET'])
+def mfa_status():
+    """Check if MFA is enabled for current user."""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    return jsonify({
+        'mfa_enabled': user.mfa_enabled
+    }), 200
 
 
 # ==================== PASSWORD RESET ROUTES ====================

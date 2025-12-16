@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Setup - HelloKittyCMS</title>
+    <script src="config.js"></script>
+    <script>
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+    </script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        .mfa-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #ffffff;
+            border: 3px solid #ffb7c5;
+            border-radius: 25px;
+            box-shadow: 0 8px 16px rgba(255, 105, 180, 0.2);
+            text-align: center;
+        }
+
+        .qr-code {
+            margin: 20px auto;
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-code img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .secret-key {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            word-break: break-all;
+            margin: 15px 0;
+        }
+
+        .verify-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #ffe6f2;
+        }
+
+        .code-input {
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            padding: 15px;
+            width: 200px;
+            border: 2px solid #ffd1dc;
+            border-radius: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .status-enabled {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-disabled {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .error-message {
+            color: #e02786;
+            background-color: #ffe6f2;
+            border: 2px solid #ffb7c5;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .success-message {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .instructions {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+        }
+
+        .danger-btn {
+            background-color: #dc3545;
+        }
+
+        .danger-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔐 Two-Factor Authentication</h1>
+
+    <div id="loading" class="mfa-container">
+        Loading...
+    </div>
+
+    <div id="not-logged-in" class="mfa-container" style="display: none;">
+        <h2>Not Logged In</h2>
+        <p>Please <a href="login.html">login</a> to manage MFA settings.</p>
+    </div>
+
+    <!-- MFA Already Enabled -->
+    <div id="mfa-enabled" class="mfa-container" style="display: none;">
+        <span class="status-badge status-enabled">✓ MFA Enabled</span>
+        <h2>Two-Factor Authentication is Active</h2>
+        <p>Your account is protected with an authenticator app.</p>
+
+        <div class="verify-section">
+            <h3>Disable MFA</h3>
+            <p>Enter your current MFA code to disable:</p>
+            <input type="text" id="disable-code" class="code-input" maxlength="6" placeholder="000000">
+            <br><br>
+            <button id="disable-btn" class="danger-btn">Disable MFA</button>
+        </div>
+
+        <div id="disable-message"></div>
+        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <!-- MFA Setup -->
+    <div id="mfa-setup" class="mfa-container" style="display: none;">
+        <span class="status-badge status-disabled">⚠ MFA Not Enabled</span>
+        <h2>Enable Two-Factor Authentication</h2>
+
+        <div class="instructions">
+            <ol>
+                <li>Download an authenticator app (Google Authenticator, Authy, etc.)</li>
+                <li>Scan the QR code below</li>
+                <li>Enter the 6-digit code from your app to verify</li>
+            </ol>
+        </div>
+
+        <button id="start-setup-btn">Generate QR Code</button>
+
+        <div id="qr-section" style="display: none;">
+            <div class="qr-code">
+                <img id="qr-image" src="" alt="QR Code">
+            </div>
+
+            <p><strong>Can't scan?</strong> Enter this key manually:</p>
+            <div class="secret-key" id="manual-key"></div>
+
+            <div class="verify-section">
+                <h3>Verify Setup</h3>
+                <p>Enter the 6-digit code from your authenticator app:</p>
+                <input type="text" id="verify-code" class="code-input" maxlength="6" placeholder="000000">
+                <br><br>
+                <button id="verify-btn">Enable MFA</button>
+            </div>
+        </div>
+
+        <div id="setup-message"></div>
+        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+    <script>
+        const loading = document.getElementById('loading');
+        const notLoggedIn = document.getElementById('not-logged-in');
+        const mfaEnabled = document.getElementById('mfa-enabled');
+        const mfaSetup = document.getElementById('mfa-setup');
+
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_id');
+            return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+        }
+
+        // Check if logged in and MFA status
+        const sessionToken = localStorage.getItem('session_id');
+        if (!sessionToken) {
+            loading.style.display = 'none';
+            notLoggedIn.style.display = 'block';
+        } else {
+            fetch(`${API_BASE_URL}/me`, {
+                credentials: 'include',
+                headers: getAuthHeaders()
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Not authenticated');
+                    return res.json();
+                })
+                .then(data => {
+                    loading.style.display = 'none';
+                    if (data.user.mfa_enabled) {
+                        mfaEnabled.style.display = 'block';
+                    } else {
+                        mfaSetup.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    localStorage.removeItem('session_id');
+                    loading.style.display = 'none';
+                    notLoggedIn.style.display = 'block';
+                });
+        }
+
+        // Setup MFA - Generate QR Code
+        let currentSecret = null;
+
+        document.getElementById('start-setup-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/mfa/setup`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    currentSecret = result.secret;
+                    document.getElementById('qr-image').src = result.qr_code;
+                    document.getElementById('manual-key').textContent = result.manual_entry_key;
+                    document.getElementById('qr-section').style.display = 'block';
+                    document.getElementById('start-setup-btn').style.display = 'none';
+                } else {
+                    showMessage('setup-message', result.error || 'Failed to generate QR code', 'error');
+                }
+            } catch (error) {
+                showMessage('setup-message', 'An error occurred', 'error');
+            }
+        });
+
+        // Verify and Enable MFA
+        document.getElementById('verify-btn').addEventListener('click', async () => {
+            const code = document.getElementById('verify-code').value.trim();
+
+            if (!code || code.length !== 6) {
+                showMessage('setup-message', 'Please enter a 6-digit code', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/mfa/enable`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        secret: currentSecret,
+                        code: code
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('setup-message', '✓ MFA enabled successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showMessage('setup-message', result.error || 'Invalid code', 'error');
+                }
+            } catch (error) {
+                showMessage('setup-message', 'An error occurred', 'error');
+            }
+        });
+
+        // Disable MFA
+        document.getElementById('disable-btn').addEventListener('click', async () => {
+            const code = document.getElementById('disable-code').value.trim();
+
+            if (!code || code.length !== 6) {
+                showMessage('disable-message', 'Please enter a 6-digit code', 'error');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to disable MFA?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/mfa/disable`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ code: code })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('disable-message', '✓ MFA disabled', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showMessage('disable-message', result.error || 'Invalid code', 'error');
+                }
+            } catch (error) {
+                showMessage('disable-message', 'An error occurred', 'error');
+            }
+        });
+
+        function showMessage(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = type === 'error' ? 'error-message' : 'success-message';
+        }
+    </script>
+</body>
+
+</html>

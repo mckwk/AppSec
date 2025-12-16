@@ -72,6 +72,8 @@ def handle_login(data):
     """
     Handle user login request.
     Returns (response_dict, status_code, session_id or None)
+    
+    If MFA is enabled, returns mfa_required=True and user must verify with /mfa/verify-login
     """
     if not data:
         logging.error("No input data provided in login request")
@@ -111,7 +113,23 @@ def handle_login(data):
         increment_failed_attempts(user)
         return {'error': GENERIC_LOGIN_ERROR}, 401, None
     
-    # Successful login
+    # Password correct - check if MFA is required
+    if user.mfa_enabled:
+        logging.info(f"MFA required for user: {email}")
+        # Return a temporary token for MFA verification
+        import secrets
+        mfa_token = secrets.token_urlsafe(32)
+        # Store in session temporarily (we'll use a simple approach here)
+        user.session_id = mfa_token  # Reuse session_id field temporarily
+        db.session.commit()
+        
+        return {
+            'mfa_required': True,
+            'mfa_token': mfa_token,
+            'message': 'Please enter your MFA code'
+        }, 200, None
+    
+    # No MFA - complete login
     reset_failed_attempts(user)
     
     # Create session
@@ -127,6 +145,50 @@ def handle_login(data):
         'message': 'Login successful',
         'user': {
             'id': user.id,
-            'email': user.email
+            'email': user.email,
+            'mfa_enabled': user.mfa_enabled
+        }
+    }, 200, session_id
+
+
+def complete_mfa_login(mfa_token, mfa_code):
+    """
+    Complete login after MFA verification.
+    """
+    from utils.mfa_handler import verify_totp_code
+    
+    # Find user by temporary mfa_token
+    user = User.query.filter_by(session_id=mfa_token).first()
+    
+    if not user:
+        logging.warning("MFA login attempt with invalid token")
+        return {'error': 'Invalid or expired MFA session'}, 401, None
+    
+    # Verify MFA code
+    if not verify_totp_code(user.totp_secret, mfa_code):
+        logging.warning(f"MFA verification failed for user: {user.email}")
+        return {'error': 'Invalid MFA code'}, 401, None
+    
+    # Clear temporary token
+    user.session_id = None
+    reset_failed_attempts(user)
+    db.session.commit()
+    
+    # Create session
+    from flask import request
+    session_id = create_session(
+        user_id=user.id,
+        ip_address=request.remote_addr,
+        user_agent=request.headers.get('User-Agent')
+    )
+    
+    logging.info(f"MFA login completed for user: {user.email}")
+    
+    return {
+        'message': 'Login successful',
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'mfa_enabled': user.mfa_enabled
         }
     }, 200, session_id
