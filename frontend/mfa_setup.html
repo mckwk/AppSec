@@ -205,7 +205,8 @@
         // Helper function to get auth headers
         function getAuthHeaders() {
             const token = localStorage.getItem('session_id');
-            return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+            const baseHeaders = { 'ngrok-skip-browser-warning': 'true', 'Content-Type': 'application/json' };
+            return token ? { ...baseHeaders, 'Authorization': `Bearer ${token}` } : baseHeaders;
         }
 
         // Check if logged in and MFA status

@@ -150,7 +150,8 @@
         // Helper function to get auth headers
         function getAuthHeaders() {
             const token = localStorage.getItem('session_id');
-            return token ? { 'Authorization': `Bearer ${token}` } : {};
+            const baseHeaders = { 'ngrok-skip-browser-warning': 'true' };
+            return token ? { ...baseHeaders, 'Authorization': `Bearer ${token}` } : baseHeaders;
         }
 
         // Check if we have a token
