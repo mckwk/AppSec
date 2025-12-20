@@ -33,7 +33,12 @@ app.config.update({
 
 db.init_app(app)
 bcrypt = Bcrypt(app)
-CORS(app, resources={r"*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, 
+     resources={r"/*": {"origins": "*"}},
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     expose_headers="*")
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -48,7 +53,7 @@ SESSION_COOKIE_NAME = 'session_id'
 SESSION_COOKIE_MAX_AGE = 86400  # 24 hours
 SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True').lower() in ['true', '1', 't']
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = None
 
 
 def template_redirect(template_name):
@@ -100,10 +105,15 @@ def get_current_user():
 
 # ==================== ROUTES ====================
 
+
 @app.route('/')
-def home():
-    logging.info("Home route accessed")
-    return render_template('home.html')
+def health_check():
+    """Simple health check endpoint to verify API is working."""
+    return jsonify({
+        'status': 'ok',
+        'message': 'API is running',
+        'service': 'HelloKittyCMS Backend'
+    }), 200
 
 
 @app.route('/activate/<token>', methods=['GET'])
