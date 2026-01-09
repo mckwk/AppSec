@@ -420,6 +420,23 @@
             return div.innerHTML;
         }
 
+        // Load image with ngrok-skip-browser-warning header
+        async function loadImageWithHeaders(imgElement, imageUrl) {
+            try {
+                const response = await fetch(imageUrl, {
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
+                if (!response.ok) {
+                    imgElement.style.display = 'none';
+                    return;
+                }
+                const blob = await response.blob();
+                imgElement.src = URL.createObjectURL(blob);
+            } catch (e) {
+                imgElement.style.display = 'none';
+            }
+        }
+
         async function checkAuth() {
             const token = localStorage.getItem('session_id');
             if (!token) return;
@@ -480,7 +497,7 @@
             let html = `
                 <article class="post-card">
                     ${post.image_path ?
-                    `<img src="${API_BASE_URL}/uploads/${post.image_path}?ngrok-skip-browser-warning=true" alt="${escapeHtml(post.title)}" class="post-image">` : ''}
+                    `<img id="post-main-image" data-src="${API_BASE_URL}/uploads/${post.image_path}" alt="${escapeHtml(post.title)}" class="post-image" style="background: #f5f5f5;">` : ''}
                     <div class="post-content">
                         <h1 class="post-title">${escapeHtml(post.title)}</h1>
                         ${post.is_deleted ? '<span class="deleted-badge">🗑️ Deleted</span>' : ''}
@@ -532,6 +549,12 @@
             container.innerHTML = html;
             document.getElementById('loading').style.display = 'none';
             container.style.display = 'block';
+
+            // Load image with headers to bypass ngrok interstitial
+            const mainImage = document.getElementById('post-main-image');
+            if (mainImage && mainImage.dataset.src) {
+                loadImageWithHeaders(mainImage, mainImage.dataset.src);
+            }
         }
 
         async function loadComments(postId) {

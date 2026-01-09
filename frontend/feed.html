@@ -386,6 +386,23 @@
             return `<span class="rating">${'★'.repeat(fullStars)}${halfStar ? '⯪' : ''}${'☆'.repeat(emptyStars)}</span> ${rating.toFixed(1)}`;
         }
 
+        // Load image with ngrok-skip-browser-warning header
+        async function loadImageWithHeaders(imgElement, imageUrl) {
+            try {
+                const response = await fetch(imageUrl, {
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
+                if (!response.ok) {
+                    imgElement.style.display = 'none';
+                    return;
+                }
+                const blob = await response.blob();
+                imgElement.src = URL.createObjectURL(blob);
+            } catch (e) {
+                imgElement.style.display = 'none';
+            }
+        }
+
         // Check auth status and update UI
         async function checkAuth() {
             const token = localStorage.getItem('session_id');
@@ -487,7 +504,7 @@
                 postsGrid.innerHTML = data.posts.map(post => `
                     <article class="post-card">
                         ${post.image_path ?
-                        `<img src="${API_BASE_URL}/uploads/${post.image_path}?ngrok-skip-browser-warning=true" alt="${escapeHtml(post.title)}" class="post-image" onerror="this.style.display='none'">` :
+                        `<img data-src="${API_BASE_URL}/uploads/${post.image_path}" alt="${escapeHtml(post.title)}" class="post-image" style="display: flex; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #ffe6f2, #ffb7c5);">` :
                         '<div class="post-image" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">🖼️</div>'}
                         <div class="post-content">
                             <h2 class="post-title">
@@ -510,6 +527,12 @@
                 `).join('');
 
                 postsGrid.style.display = 'grid';
+
+                // Load images with headers to bypass ngrok interstitial
+                document.querySelectorAll('.post-image[data-src]').forEach(img => {
+                    loadImageWithHeaders(img, img.dataset.src);
+                });
+
 
                 // Pagination
                 if (data.pagination.pages > 1) {
