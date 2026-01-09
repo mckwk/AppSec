@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post - HelloKittyCMS</title>
+    <meta name="description" content="Share your content on HelloKittyCMS">
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        :root {
+            --primary-pink: #ff69b4;
+            --primary-dark: #e02786;
+            --bg-gradient: linear-gradient(135deg, #ffe6f2, #fff0f5);
+            --card-bg: #ffffff;
+            --text-dark: #5a3e4a;
+            --text-light: #8e7a82;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 8px 30px rgba(255, 105, 180, 0.2);
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            margin: 0 0 30px 0;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ffb7c5;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+        }
+
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        /* Image Upload */
+        .upload-area {
+            border: 2px dashed #ffb7c5;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fef6f9;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-pink);
+            background: #fff0f5;
+        }
+
+        .upload-area.has-file {
+            border-style: solid;
+            border-color: var(--success);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        .upload-hint {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .image-preview {
+            margin-top: 15px;
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .remove-image {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text-dark);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Not authenticated */
+        .auth-required {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .auth-required .emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .auth-required h2 {
+            color: var(--text-dark);
+        }
+
+        .auth-required p {
+            color: var(--text-light);
+        }
+
+        .auth-required a {
+            color: var(--primary-pink);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="feed.html" class="back-link">← Back to Feed</a>
+
+        <!-- Not authenticated state -->
+        <div id="auth-required" class="form-card auth-required hidden">
+            <div class="emoji">🔒</div>
+            <h2>Login Required</h2>
+            <p>You need to be logged in to create posts.</p>
+            <a href="login.html" class="btn btn-primary" style="display: inline-block; margin-top: 20px;">Login</a>
+        </div>
+
+        <!-- Form -->
+        <div id="form-container" class="form-card hidden">
+            <h1 class="form-title" id="form-title">📝 Create New Post</h1>
+
+            <div id="alert" class="alert hidden"></div>
+
+            <form id="post-form">
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" name="title" placeholder="Enter a catchy title..." maxlength="255"
+                        required>
+                    <div class="char-count"><span id="title-count">0</span>/255</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Content</label>
+                    <textarea id="content" name="content"
+                        placeholder="Share your thoughts, stories, or ideas..."></textarea>
+                    <div class="char-count"><span id="content-count">0</span> characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Image (optional)</label>
+                    <div class="upload-area" id="upload-area" onclick="document.getElementById('image-input').click()">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Click or drag to upload an image</div>
+                        <div class="upload-hint">PNG, JPG, GIF or WebP • Max 5MB</div>
+                    </div>
+                    <input type="file" id="image-input" accept="image/png,image/jpeg,image/gif,image/webp"
+                        style="display: none;">
+                    <img id="image-preview" class="image-preview">
+                    <button type="button" id="remove-image" class="remove-image hidden" onclick="removeImage()">✕ Remove
+                        Image</button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="window.location.href='feed.html'">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">✨ Publish Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+        let currentUser = null;
+        let editingPostId = null;
+        let selectedFile = null;
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_id');
+            return token ? {
+                'Authorization': `Bearer ${token}`,
+                'ngrok-skip-browser-warning': 'true'
+            } : { 'ngrok-skip-browser-warning': 'true' };
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('session_id');
+
+            if (!token) {
+                document.getElementById('auth-required').classList.remove('hidden');
+                return false;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/me`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('Not authenticated');
+
+                const data = await res.json();
+                currentUser = data.user;
+
+                document.getElementById('form-container').classList.remove('hidden');
+                return true;
+
+            } catch (err) {
+                localStorage.removeItem('session_id');
+                document.getElementById('auth-required').classList.remove('hidden');
+                return false;
+            }
+        }
+
+        async function loadPostForEdit(postId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    showAlert('Post not found', 'error');
+                    return;
+                }
+
+                const post = await res.json();
+
+                // Check permissions
+                if (currentUser.id !== post.user_id && currentUser.role !== 'admin') {
+                    showAlert('You do not have permission to edit this post', 'error');
+                    return;
+                }
+
+                document.getElementById('form-title').textContent = '✏️ Edit Post';
+                document.getElementById('submit-btn').textContent = '💾 Save Changes';
+                document.getElementById('title').value = post.title;
+                document.getElementById('content').value = post.content || '';
+
+                updateCharCounts();
+                editingPostId = postId;
+
+            } catch (err) {
+                showAlert('Error loading post: ' + err.message, 'error');
+            }
+        }
+
+        function updateCharCounts() {
+            document.getElementById('title-count').textContent = document.getElementById('title').value.length;
+            document.getElementById('content-count').textContent = document.getElementById('content').value.length;
+        }
+
+        // Image upload handling
+        const uploadArea = document.getElementById('upload-area');
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const removeBtn = document.getElementById('remove-image');
+
+        imageInput.addEventListener('change', handleFileSelect);
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#e02786';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ffb7c5';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ffb7c5';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                imageInput.files = files;
+                handleFileSelect({ target: imageInput });
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                showAlert('Invalid file type. Please upload PNG, JPG, GIF or WebP.', 'error');
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('File too large. Maximum size is 5MB.', 'error');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                removeBtn.classList.remove('hidden');
+                uploadArea.classList.add('has-file');
+                uploadArea.querySelector('.upload-text').textContent = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            selectedFile = null;
+            imageInput.value = '';
+            imagePreview.style.display = 'none';
+            removeBtn.classList.add('hidden');
+            uploadArea.classList.remove('has-file');
+            uploadArea.querySelector('.upload-text').textContent = 'Click or drag to upload an image';
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.classList.remove('hidden');
+
+            if (type === 'success') {
+                setTimeout(() => alert.classList.add('hidden'), 5000);
+            }
+        }
+
+        // Form submission
+        document.getElementById('post-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (!title) {
+                showAlert('Title is required', 'error');
+                return;
+            }
+
+            if (title.length < 3) {
+                showAlert('Title must be at least 3 characters', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = editingPostId ? 'Saving...' : 'Publishing...';
+
+            try {
+                let res;
+
+                if (editingPostId) {
+                    // Update existing post
+                    res = await fetch(`${API_BASE_URL}/posts/${editingPostId}`, {
+                        method: 'PUT',
+                        headers: {
+                            ...getAuthHeaders(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ title, content })
+                    });
+                } else {
+                    // Create new post with optional image
+                    const formData = new FormData();
+                    formData.append('title', title);
+                    if (content) formData.append('content', content);
+                    if (selectedFile) formData.append('image', selectedFile);
+
+                    res = await fetch(`${API_BASE_URL}/posts`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: formData
+                    });
+                }
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.error || 'Failed to save post', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = editingPostId ? '💾 Save Changes' : '✨ Publish Post';
+                    return;
+                }
+
+                // Redirect to the post
+                const postId = editingPostId || data.post.id;
+                window.location.href = `post.html?id=${postId}`;
+
+            } catch (err) {
+                showAlert('Error: ' + err.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = editingPostId ? '💾 Save Changes' : '✨ Publish Post';
+            }
+        });
+
+        // Character count updates
+        document.getElementById('title').addEventListener('input', updateCharCounts);
+        document.getElementById('content').addEventListener('input', updateCharCounts);
+
+        // Initialize
+        (async () => {
+            const authenticated = await checkAuth();
+            if (!authenticated) return;
+
+            // Check if editing
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+
+            if (editId) {
+                await loadPostForEdit(editId);
+            }
+        })();
+    </script>
+</body>
+
+</html>

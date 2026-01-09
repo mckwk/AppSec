@@ -126,10 +126,10 @@
         </div>
 
         <div class="nav-links">
+            <a href="feed.html" class="nav-link">📰 Browse Feed</a>
+            <a href="create_post.html" class="nav-link">➕ Create Post</a>
             <a href="mfa_setup.html" class="nav-link">🔐 MFA Settings</a>
-            <a href="#" class="nav-link">📝 Manage Content</a>
-            <a href="#" class="nav-link">⚙️ Settings</a>
-            <a href="#" class="nav-link">📊 Analytics</a>
+            <a href="#" class="nav-link" id="admin-link" style="display: none;">🛡️ Admin Panel</a>
         </div>
 
         <button id="logout-btn" class="logout-btn">🚪 Logout</button>
@@ -175,6 +175,13 @@
                     loading.style.display = 'none';
                     dashboardContainer.style.display = 'block';
                     userEmailElement.textContent = data.user.email;
+
+                    // Show admin link if user is admin
+                    if (data.user.role === 'admin') {
+                        const adminLink = document.getElementById('admin-link');
+                        adminLink.style.display = 'inline-block';
+                        adminLink.href = 'admin.html';
+                    }
                 })
                 .catch(err => {
                     // Clear invalid token

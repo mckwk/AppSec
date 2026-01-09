@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post - HelloKittyCMS</title>
+    <meta name="description" content="View post details on HelloKittyCMS">
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        :root {
+            --primary-pink: #ff69b4;
+            --primary-dark: #e02786;
+            --bg-gradient: linear-gradient(135deg, #ffe6f2, #fff0f5);
+            --card-bg: #ffffff;
+            --text-dark: #5a3e4a;
+            --text-light: #8e7a82;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+        }
+
+        /* Post Card */
+        .post-card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(255, 105, 180, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            background: #f5f5f5;
+        }
+
+        .post-content {
+            padding: 30px;
+        }
+
+        .post-title {
+            font-size: 2rem;
+            color: var(--text-dark);
+            margin: 0 0 15px 0;
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .post-body {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+            white-space: pre-wrap;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #ffe6f2;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text-dark);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #333;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Rating */
+        .rating-section {
+            background: #fef6f9;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .rating-section h3 {
+            margin: 0 0 15px 0;
+            color: var(--text-dark);
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.2s;
+        }
+
+        .star.filled,
+        .star:hover {
+            color: var(--warning);
+        }
+
+        .rating-stats {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Comments */
+        .comments-section {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(255, 105, 180, 0.15);
+        }
+
+        .comments-section h3 {
+            color: var(--text-dark);
+            margin: 0 0 20px 0;
+        }
+
+        .comment-form {
+            margin-bottom: 25px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ffb7c5;
+            border-radius: 15px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+        }
+
+        .comment {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #ffe6f2;
+        }
+
+        .comment:last-child {
+            border-bottom: none;
+        }
+
+        .comment-avatar {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #a8d8ea, #6ec5e9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .comment-date {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .comment-text {
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .comment-actions {
+            margin-top: 8px;
+        }
+
+        .comment-actions button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 3px 8px;
+        }
+
+        .comment-actions button:hover {
+            color: var(--danger);
+        }
+
+        /* Report Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            margin: 0 0 20px 0;
+            color: var(--text-dark);
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ffb7c5;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--primary-pink);
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--danger);
+        }
+
+        .deleted-badge {
+            background: var(--danger);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="feed.html" class="back-link">← Back to Feed</a>
+
+        <div id="loading" class="loading">Loading post... 🐱</div>
+        <div id="error" class="error-state" style="display: none;"></div>
+        <div id="post-container" style="display: none;"></div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal">
+        <div class="modal-content">
+            <h3>🚩 Report Content</h3>
+            <textarea id="report-reason" placeholder="Please describe why you're reporting this content..."></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeReportModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="submitReport()">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+        let currentUser = null;
+        let currentPost = null;
+        let reportTarget = null;
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_id');
+            const baseHeaders = {
+                'ngrok-skip-browser-warning': 'true',
+                'Content-Type': 'application/json'
+            };
+            return token ? { ...baseHeaders, 'Authorization': `Bearer ${token}` } : baseHeaders;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getInitials(email) {
+            return email ? email.charAt(0).toUpperCase() : '?';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('session_id');
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/me`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user;
+                }
+            } catch (err) {
+                console.error('Auth check failed:', err);
+            }
+        }
+
+        async function loadPost() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('id');
+
+            if (!postId) {
+                showError('Post ID not found');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        showError('Post not found');
+                    } else {
+                        showError('Failed to load post');
+                    }
+                    return;
+                }
+
+                currentPost = await res.json();
+                document.title = `${currentPost.title} - HelloKittyCMS`;
+                renderPost();
+                loadComments(postId);
+
+            } catch (err) {
+                showError('Error loading post: ' + err.message);
+            }
+        }
+
+        function renderPost() {
+            const container = document.getElementById('post-container');
+            const post = currentPost;
+            const canEdit = currentUser && (currentUser.id === post.user_id || currentUser.role === 'admin');
+
+            let html = `
+                <article class="post-card">
+                    ${post.image_path ?
+                    `<img src="${API_BASE_URL}/uploads/${post.image_path}" alt="${escapeHtml(post.title)}" class="post-image">` : ''}
+                    <div class="post-content">
+                        <h1 class="post-title">${escapeHtml(post.title)}</h1>
+                        ${post.is_deleted ? '<span class="deleted-badge">🗑️ Deleted</span>' : ''}
+                        <div class="post-meta">
+                            <div class="avatar">${getInitials(post.user_email)}</div>
+                            <span>${escapeHtml(post.user_email || 'Unknown')}</span>
+                            <span>•</span>
+                            <span>${formatDate(post.created_at)}</span>
+                            ${post.updated_at ? `<span>• Updated ${formatDate(post.updated_at)}</span>` : ''}
+                        </div>
+                        ${post.content ? `<div class="post-body">${escapeHtml(post.content)}</div>` : ''}
+                        <div class="post-actions">
+                            ${currentUser ? `<button class="btn btn-warning" onclick="openReportModal('post', ${post.id})">🚩 Report</button>` : ''}
+                            ${canEdit ? `
+                                <button class="btn btn-secondary" onclick="editPost()">✏️ Edit</button>
+                                <button class="btn btn-danger" onclick="deletePost()">🗑️ Delete</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Rating Section -->
+                <div class="rating-section">
+                    <h3>⭐ Rate this post</h3>
+                    <div class="rating-stars" id="rating-stars">
+                        ${[1, 2, 3, 4, 5].map(i => `
+                            <span class="star ${post.user_rating >= i ? 'filled' : ''}" data-value="${i}" onclick="ratePost(${i})">★</span>
+                        `).join('')}
+                    </div>
+                    <div class="rating-stats">
+                        Average: ${post.rating_avg ? post.rating_avg.toFixed(1) : 'No ratings yet'} 
+                        (${post.comment_count || 0} comments)
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="comments-section">
+                    <h3>💬 Comments</h3>
+                    ${currentUser ? `
+                        <div class="comment-form">
+                            <textarea id="comment-input" placeholder="Write a comment..."></textarea>
+                            <button class="btn btn-primary" onclick="submitComment()" style="margin-top: 10px;">Post Comment</button>
+                        </div>
+                    ` : '<p>Please <a href="login.html">login</a> to comment.</p>'}
+                    <div id="comments-list"></div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            document.getElementById('loading').style.display = 'none';
+            container.style.display = 'block';
+        }
+
+        async function loadComments(postId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) return;
+
+                const data = await res.json();
+                renderComments(data.comments);
+
+            } catch (err) {
+                console.error('Failed to load comments:', err);
+            }
+        }
+
+        function renderComments(comments) {
+            const list = document.getElementById('comments-list');
+
+            if (comments.length === 0) {
+                list.innerHTML = '<p style="color: #8e7a82; text-align: center;">No comments yet. Be the first!</p>';
+                return;
+            }
+
+            list.innerHTML = comments.map(c => {
+                const canDelete = currentUser && (currentUser.id === c.user_id || currentUser.role === 'admin');
+                return `
+                    <div class="comment ${c.is_deleted ? 'deleted' : ''}">
+                        <div class="comment-avatar">${getInitials(c.user_email)}</div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <span class="comment-author">${escapeHtml(c.user_email || 'Unknown')}</span>
+                                <span class="comment-date">${formatDate(c.created_at)}</span>
+                            </div>
+                            <div class="comment-text">${escapeHtml(c.content)}</div>
+                            <div class="comment-actions">
+                                ${currentUser ? `<button onclick="openReportModal('comment', ${c.id})">🚩 Report</button>` : ''}
+                                ${canDelete ? `<button onclick="deleteComment(${c.id})">🗑️ Delete</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function ratePost(value) {
+            if (!currentUser) {
+                alert('Please login to rate posts');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/posts/${currentPost.id}/rating`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ value })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to save rating');
+                    return;
+                }
+
+                // Update stars visually
+                document.querySelectorAll('.star').forEach((star, i) => {
+                    star.classList.toggle('filled', i < value);
+                });
+
+                currentPost.user_rating = value;
+
+            } catch (err) {
+                alert('Error saving rating: ' + err.message);
+            }
+        }
+
+        async function submitComment() {
+            const input = document.getElementById('comment-input');
+            const content = input.value.trim();
+
+            if (!content) {
+                alert('Please enter a comment');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/posts/${currentPost.id}/comments`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ content })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Failed to post comment');
+                    return;
+                }
+
+                input.value = '';
+                loadComments(currentPost.id);
+
+            } catch (err) {
+                alert('Error posting comment: ' + err.message);
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm('Are you sure you want to delete this comment?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to delete comment');
+                    return;
+                }
+
+                loadComments(currentPost.id);
+
+            } catch (err) {
+                alert('Error deleting comment: ' + err.message);
+            }
+        }
+
+        async function deletePost() {
+            if (!confirm('Are you sure you want to delete this post?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/posts/${currentPost.id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to delete post');
+                    return;
+                }
+
+                window.location.href = 'feed.html';
+
+            } catch (err) {
+                alert('Error deleting post: ' + err.message);
+            }
+        }
+
+        function editPost() {
+            window.location.href = `create_post.html?edit=${currentPost.id}`;
+        }
+
+        function openReportModal(type, id) {
+            reportTarget = { type, id };
+            document.getElementById('report-modal').classList.add('active');
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.remove('active');
+            document.getElementById('report-reason').value = '';
+            reportTarget = null;
+        }
+
+        async function submitReport() {
+            const reason = document.getElementById('report-reason').value.trim();
+
+            if (!reason || reason.length < 10) {
+                alert('Please provide a detailed reason (at least 10 characters)');
+                return;
+            }
+
+            const body = {
+                reason,
+                [reportTarget.type === 'post' ? 'post_id' : 'comment_id']: reportTarget.id
+            };
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/reports`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Failed to submit report');
+                    return;
+                }
+
+                alert('Report submitted successfully. Our moderators will review it.');
+                closeReportModal();
+
+            } catch (err) {
+                alert('Error submitting report: ' + err.message);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const error = document.getElementById('error');
+            error.innerHTML = `<h2>❌ ${message}</h2><p><a href="feed.html">Back to feed</a></p>`;
+            error.style.display = 'block';
+        }
+
+        // Initialize
+        (async () => {
+            await checkAuth();
+            await loadPost();
+        })();
+    </script>
+</body>
+
+</html>

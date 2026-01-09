@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - HelloKittyCMS</title>
+    <meta name="description" content="Administration panel for HelloKittyCMS">
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        :root {
+            --primary-pink: #ff69b4;
+            --primary-dark: #e02786;
+            --bg-gradient: linear-gradient(135deg, #2d2d3a, #1a1a2e);
+            --card-bg: #2d2d3a;
+            --card-dark: #1e1e2a;
+            --text-light: #ffffff;
+            --text-muted: #a0a0b0;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-light);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            color: var(--primary-pink);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-link {
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-pink);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            background: var(--card-bg);
+            color: var(--text-muted);
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: var(--card-dark);
+            color: var(--text-light);
+        }
+
+        .tab-btn.active {
+            background: var(--primary-pink);
+            color: white;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: var(--card-dark);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-admin {
+            background: var(--primary-pink);
+            color: white;
+        }
+
+        .badge-user {
+            background: var(--info);
+            color: white;
+        }
+
+        .badge-active {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-inactive {
+            background: var(--danger);
+            color: white;
+        }
+
+        .badge-pending {
+            background: var(--warning);
+            color: #333;
+        }
+
+        .badge-reviewed {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-dismissed {
+            background: var(--text-muted);
+            color: white;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            margin: 2px;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-pink);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #333;
+        }
+
+        .btn-secondary {
+            background: var(--text-muted);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--primary-pink);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* Access Denied */
+        .access-denied {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .access-denied .emoji {
+            font-size: 5rem;
+        }
+
+        .access-denied h2 {
+            color: var(--danger);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .pagination button {
+            background: var(--card-dark);
+            border: none;
+            color: var(--text-light);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-pink);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Audit Log */
+        .log-entry {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            min-width: 150px;
+        }
+
+        .log-action {
+            flex: 1;
+        }
+
+        .log-action code {
+            background: var(--card-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.85rem;
+            }
+
+            th,
+            td {
+                padding: 10px;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="access-denied" class="access-denied" style="display: none;">
+            <div class="emoji">🚫</div>
+            <h2>Access Denied</h2>
+            <p>You must be an admin to access this page.</p>
+            <a href="feed.html" class="btn btn-primary">Back to Feed</a>
+        </div>
+
+        <div id="admin-content" style="display: none;">
+            <header class="header">
+                <h1>🛡️ Admin Panel</h1>
+                <a href="feed.html" class="back-link">← Back to Feed</a>
+            </header>
+
+            <!-- Stats -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-users">-</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-posts">-</div>
+                    <div class="stat-label">Total Posts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-comments">-</div>
+                    <div class="stat-label">Total Comments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-reports">-</div>
+                    <div class="stat-label">Pending Reports</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('users')">👥 Users</button>
+                <button class="tab-btn" onclick="showTab('reports')">🚩 Reports</button>
+                <button class="tab-btn" onclick="showTab('deleted')">🗑️ Deleted Content</button>
+                <button class="tab-btn" onclick="showTab('audit')">📋 Audit Log</button>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="tab-users" class="tab-content active">
+                <div class="table-container">
+                    <div id="users-loading" class="loading">Loading users...</div>
+                    <table id="users-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Posts</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="tab-reports" class="tab-content">
+                <div class="table-container">
+                    <div id="reports-loading" class="loading">Loading reports...</div>
+                    <table id="reports-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Reporter</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-tbody"></tbody>
+                    </table>
+                    <div id="reports-empty" class="empty-state" style="display: none;">
+                        No pending reports 🎉
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deleted Content Tab -->
+            <div id="tab-deleted" class="tab-content">
+                <div class="table-container">
+                    <div id="deleted-loading" class="loading">Loading deleted content...</div>
+                    <table id="deleted-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>ID</th>
+                                <th>Content</th>
+                                <th>Owner</th>
+                                <th>Deleted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deleted-tbody"></tbody>
+                    </table>
+                    <div id="deleted-empty" class="empty-state" style="display: none;">
+                        No deleted content
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Log Tab -->
+            <div id="tab-audit" class="tab-content">
+                <div class="table-container">
+                    <div id="audit-loading" class="loading">Loading audit logs...</div>
+                    <div id="audit-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+        let currentUser = null;
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('session_id');
+            return token ? {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            } : { 'ngrok-skip-browser-warning': 'true' };
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('session_id');
+
+            if (!token) {
+                showAccessDenied();
+                return false;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/me`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('Not authenticated');
+
+                const data = await res.json();
+                currentUser = data.user;
+
+                if (currentUser.role !== 'admin') {
+                    showAccessDenied();
+                    return false;
+                }
+
+                document.getElementById('admin-content').style.display = 'block';
+                return true;
+
+            } catch (err) {
+                showAccessDenied();
+                return false;
+            }
+        }
+
+        function showAccessDenied() {
+            document.getElementById('access-denied').style.display = 'block';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load Stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/stats`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) return;
+
+                const stats = await res.json();
+                document.getElementById('stat-users').textContent = stats.users?.total || 0;
+                document.getElementById('stat-posts').textContent = stats.posts?.total || 0;
+                document.getElementById('stat-comments').textContent = stats.comments?.total || 0;
+                document.getElementById('stat-reports').textContent = stats.reports?.pending || 0;
+
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // Load data for tab
+            switch (tabName) {
+                case 'users': loadUsers(); break;
+                case 'reports': loadReports(); break;
+                case 'deleted': loadDeleted(); break;
+                case 'audit': loadAuditLog(); break;
+            }
+        }
+
+        // Load Users
+        async function loadUsers() {
+            const tbody = document.getElementById('users-tbody');
+            const table = document.getElementById('users-table');
+            const loading = document.getElementById('users-loading');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users?include_deleted=true`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('Failed to load users');
+
+                const data = await res.json();
+
+                tbody.innerHTML = data.users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td><span class="badge badge-${u.role}">${u.role}</span></td>
+                        <td>
+                            ${u.is_deleted ? '<span class="badge badge-inactive">Deleted</span>' :
+                        (u.is_active ? '<span class="badge badge-active">Active</span>' :
+                            '<span class="badge badge-inactive">Inactive</span>')}
+                        </td>
+                        <td>${u.post_count || 0}</td>
+                        <td>${formatDate(u.created_at)}</td>
+                        <td>
+                            ${u.id !== currentUser.id ? `
+                                ${u.role === 'user' ?
+                            `<button class="btn btn-sm btn-primary" onclick="updateRole(${u.id}, 'admin')">Make Admin</button>` :
+                            `<button class="btn btn-sm btn-secondary" onclick="updateRole(${u.id}, 'user')">Make User</button>`}
+                                ${u.is_deleted ?
+                            `<button class="btn btn-sm btn-success" onclick="restoreUser(${u.id})">Restore</button>` :
+                            (u.is_active ?
+                                `<button class="btn btn-sm btn-warning" onclick="banUser(${u.id})">Ban</button>` :
+                                `<button class="btn btn-sm btn-success" onclick="unbanUser(${u.id})">Unban</button>`)}
+                                ${!u.is_deleted ? `<button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button>` : ''}
+                            ` : '<em>You</em>'}
+                        </td>
+                    </tr>
+                `).join('');
+
+                loading.style.display = 'none';
+                table.style.display = 'table';
+
+            } catch (err) {
+                loading.textContent = 'Error loading users: ' + err.message;
+            }
+        }
+
+        // User actions
+        async function updateRole(userId, role) {
+            if (!confirm(`Change user role to ${role}?`)) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ role })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to update role');
+                    return;
+                }
+
+                loadUsers();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function banUser(userId) {
+            if (!confirm('Ban this user?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/ban`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to ban user');
+                    return;
+                }
+
+                loadUsers();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function unbanUser(userId) {
+            if (!confirm('Unban this user?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/unban`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to unban user');
+                    return;
+                }
+
+                loadUsers();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Delete this user? This can be undone.')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to delete user');
+                    return;
+                }
+
+                loadUsers();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function restoreUser(userId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/restore`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to restore user');
+                    return;
+                }
+
+                loadUsers();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Load Reports
+        async function loadReports() {
+            const tbody = document.getElementById('reports-tbody');
+            const table = document.getElementById('reports-table');
+            const loading = document.getElementById('reports-loading');
+            const empty = document.getElementById('reports-empty');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/reports?status=all`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('Failed to load reports');
+
+                const data = await res.json();
+
+                if (data.reports.length === 0) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                tbody.innerHTML = data.reports.map(r => `
+                    <tr>
+                        <td>${r.id}</td>
+                        <td>${r.post_id ? '📝 Post' : '💬 Comment'}</td>
+                        <td>${escapeHtml(r.reporter_email || 'Unknown')}</td>
+                        <td>${escapeHtml(r.reason?.substring(0, 50))}${r.reason?.length > 50 ? '...' : ''}</td>
+                        <td><span class="badge badge-${r.status}">${r.status}</span></td>
+                        <td>${formatDate(r.created_at)}</td>
+                        <td>
+                            ${r.status === 'pending' ? `
+                                <button class="btn btn-sm btn-success" onclick="reviewReport(${r.id}, 'approve', false)">Approve</button>
+                                <button class="btn btn-sm btn-danger" onclick="reviewReport(${r.id}, 'approve', true)">Approve & Delete</button>
+                                <button class="btn btn-sm btn-secondary" onclick="reviewReport(${r.id}, 'dismiss', false)">Dismiss</button>
+                            ` : `<em>Reviewed</em>`}
+                        </td>
+                    </tr>
+                `).join('');
+
+                loading.style.display = 'none';
+                table.style.display = 'table';
+
+            } catch (err) {
+                loading.textContent = 'Error loading reports: ' + err.message;
+            }
+        }
+
+        async function reviewReport(reportId, action, deleteContent) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ action, delete_content: deleteContent })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to review report');
+                    return;
+                }
+
+                loadReports();
+                loadStats();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Load Deleted Content
+        async function loadDeleted() {
+            const tbody = document.getElementById('deleted-tbody');
+            const table = document.getElementById('deleted-table');
+            const loading = document.getElementById('deleted-loading');
+            const empty = document.getElementById('deleted-empty');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/deleted`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('Failed to load deleted content');
+
+                const data = await res.json();
+
+                if (data.deleted.length === 0) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                tbody.innerHTML = data.deleted.map(item => `
+                    <tr>
+                        <td>${item.type === 'post' ? '📝 Post' : (item.type === 'comment' ? '💬 Comment' : '👤 User')}</td>
+                        <td>${item.id}</td>
+                        <td>${escapeHtml(item.title || item.content || item.email || '-')}</td>
+                        <td>${escapeHtml(item.user_email || '-')}</td>
+                        <td>${formatDate(item.deleted_at)}</td>
+                        <td>
+                            ${item.type === 'post' ?
+                        `<button class="btn btn-sm btn-success" onclick="restorePost(${item.id})">Restore</button>` :
+                        (item.type === 'comment' ?
+                            `<button class="btn btn-sm btn-success" onclick="restoreComment(${item.id})">Restore</button>` :
+                            `<button class="btn btn-sm btn-success" onclick="restoreUser(${item.id})">Restore</button>`)}
+                        </td>
+                    </tr>
+                `).join('');
+
+                loading.style.display = 'none';
+                table.style.display = 'table';
+
+            } catch (err) {
+                loading.textContent = 'Error loading deleted content: ' + err.message;
+            }
+        }
+
+        async function restorePost(postId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/posts/${postId}/restore`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to restore post');
+                    return;
+                }
+
+                loadDeleted();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function restoreComment(commentId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/comments/${commentId}/restore`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to restore comment');
+                    return;
+                }
+
+                loadDeleted();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Load Audit Log
+        async function loadAuditLog() {
+            const list = document.getElementById('audit-list');
+            const loading = document.getElementById('audit-loading');
+
+            loading.style.display = 'block';
+            list.innerHTML = '';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/audit?limit=50`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('Failed to load audit log');
+
+                const data = await res.json();
+
+                if (data.logs.length === 0) {
+                    loading.style.display = 'none';
+                    list.innerHTML = '<div class="empty-state">No audit log entries</div>';
+                    return;
+                }
+
+                list.innerHTML = data.logs.map(log => `
+                    <div class="log-entry">
+                        <div class="log-time">${formatDate(log.created_at)}</div>
+                        <div class="log-action">
+                            <code>${log.action}</code>
+                            ${log.resource_type ? ` on <strong>${log.resource_type}</strong> #${log.resource_id}` : ''}
+                            ${log.user_id ? ` by user #${log.user_id}` : ''}
+                            ${log.ip_address ? ` from ${log.ip_address}` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                loading.style.display = 'none';
+
+            } catch (err) {
+                loading.textContent = 'Error loading audit log: ' + err.message;
+            }
+        }
+
+        // Initialize
+        (async () => {
+            const isAdmin = await checkAuth();
+            if (!isAdmin) return;
+
+            loadStats();
+            loadUsers();
+        })();
+    </script>
+</body>
+
+</html>
