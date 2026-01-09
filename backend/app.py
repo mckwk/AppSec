@@ -870,10 +870,40 @@ def ratelimit_handler(e):
     return jsonify({'error': 'Too many requests. Please try again later.'}), 429
 
 
+def create_default_admin():
+    """Create default admin user if it doesn't exist."""
+    from database.models import User
+    from config import PEPPER
+    
+    admin_email = os.getenv('DEFAULT_ADMIN_EMAIL')
+    admin_password = os.getenv('DEFAULT_ADMIN_PASSWORD')
+    
+    if not admin_email or not admin_password:
+        logging.info("DEFAULT_ADMIN_EMAIL or DEFAULT_ADMIN_PASSWORD not set, skipping admin creation")
+        return
+    
+    existing_admin = User.query.filter_by(email=admin_email).first()
+    if existing_admin:
+        logging.info(f"Default admin user already exists: {admin_email}")
+        return
+    
+    admin = User(
+        email=admin_email,
+        password_hash=bcrypt.generate_password_hash(admin_password + PEPPER).decode('utf-8'),
+        is_active=True,
+        role='admin'
+    )
+    
+    db.session.add(admin)
+    db.session.commit()
+    logging.info(f"Created default admin user: {admin_email}")
+
+
 if __name__ == '__main__':
     with app.app_context():
         logging.info("Creating database tables")
         db.create_all()
+        create_default_admin()
     debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() in ['true', '1', 't']
     logging.info(
         f"Starting Flask app in {'debug' if debug_mode else 'production'} mode")
