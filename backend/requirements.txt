@@ -10,3 +10,5 @@ pymysql
 flask-limiter
 pyotp
 qrcode[pil]
+Pillow
+bleach
