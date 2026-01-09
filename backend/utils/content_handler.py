@@ -273,10 +273,12 @@ def update_post(user_id, post_id, title=None, content=None, is_admin=False, imag
     
     # Handle image upload
     if image_file:
-        from utils.upload_handler import save_image
-        image_path = save_image(image_file, 'posts')
-        if image_path:
-            post.image_path = image_path
+        from utils.upload_handler import validate_and_save_image
+        success, result, relative_path = validate_and_save_image(image_file)
+        if success:
+            post.image_path = relative_path
+        else:
+            return False, result  # result contains error message
     
     try:
         db.session.commit()
