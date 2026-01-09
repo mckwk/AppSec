@@ -222,7 +222,7 @@ button {
     box-shadow: 0 4px 16px rgba(233, 30, 140, 0.3);
 }
 
-button::before {
+form button::before {
     content: '';
     position: absolute;
     top: 0;
@@ -238,7 +238,7 @@ button:hover {
     box-shadow: 0 8px 24px rgba(233, 30, 140, 0.4);
 }
 
-button:hover::before {
+form button:hover::before {
     left: 100%;
 }
 

@@ -7,6 +7,11 @@
     <title>HelloKittyCMS Registration</title>
     <script src="config.js"></script>
     <script>
+        // Redirect non-logged users to feed.html as the landing page
+        // Users who specifically want to register can navigate here from login page
+        if (!localStorage.getItem('session_id') && !window.location.search.includes('register=1')) {
+            window.location.href = 'feed.html';
+        }
         const API_BASE_URL = CONFIG.API_BASE_URL;
     </script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
