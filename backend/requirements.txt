@@ -12,3 +12,4 @@ pyotp
 qrcode[pil]
 Pillow
 bleach
+pytest
