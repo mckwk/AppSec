@@ -61,7 +61,7 @@ CORS(app,
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["2200 per day", "500 per hour"]
 )
 
 GENERIC_REG_ERROR = 'Registration failed. Please check your input and captcha.'
