@@ -480,7 +480,7 @@
             let html = `
                 <article class="post-card">
                     ${post.image_path ?
-                    `<img src="${API_BASE_URL}/uploads/${post.image_path}" alt="${escapeHtml(post.title)}" class="post-image">` : ''}
+                    `<img src="${API_BASE_URL}/uploads/${post.image_path}?ngrok-skip-browser-warning=true" alt="${escapeHtml(post.title)}" class="post-image">` : ''}
                     <div class="post-content">
                         <h1 class="post-title">${escapeHtml(post.title)}</h1>
                         ${post.is_deleted ? '<span class="deleted-badge">🗑️ Deleted</span>' : ''}

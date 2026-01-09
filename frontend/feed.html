@@ -477,8 +477,8 @@
                 postsGrid.innerHTML = data.posts.map(post => `
                     <article class="post-card">
                         ${post.image_path ?
-                        `<img src="${API_BASE_URL}/uploads/${post.image_path}" alt="${post.title}" class="post-image" onerror="this.style.display='none'">` :
-                        '<div class="post-image" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">🖼️</div>'}
+    `<img src="${API_BASE_URL}/uploads/${post.image_path}?ngrok-skip-browser-warning=true" alt="${post.title}" class="post-image" onerror="this.style.display='none'">` :
+    '<div class="post-image" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">🖼️</div>'}
                         <div class="post-content">
                             <h2 class="post-title">
                                 <a href="post.html?id=${post.id}">${escapeHtml(post.title)}</a>

@@ -836,8 +836,10 @@ def admin_get_audit_logs():
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def serve_upload(filename):
     """Serve uploaded files (public)."""
-    # Security: path traversal protection is handled by send_from_directory
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    response = send_from_directory(UPLOAD_FOLDER, filename)
+    response.headers['Cache-Control'] = 'public, max-age=31536000'
+    response.headers['ngrok-skip-browser-warning'] = 'true'
+    return response
 
 
 # ==================== ERROR HANDLERS ====================
