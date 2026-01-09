@@ -366,6 +366,26 @@
                 document.getElementById('title').value = post.title;
                 document.getElementById('content').value = post.content || '';
 
+                // Show current image if exists
+                if (post.image_path) {
+                    const imageUrl = `${API_BASE_URL}/uploads/${post.image_path}`;
+                    // Load image with ngrok header
+                    try {
+                        const imgRes = await fetch(imageUrl, {
+                            headers: { 'ngrok-skip-browser-warning': 'true' }
+                        });
+                        if (imgRes.ok) {
+                            const blob = await imgRes.blob();
+                            imagePreview.src = URL.createObjectURL(blob);
+                            imagePreview.style.display = 'block';
+                            uploadArea.classList.add('has-file');
+                            uploadArea.querySelector('.upload-text').textContent = 'Current image (upload new to replace)';
+                        }
+                    } catch (imgErr) {
+                        console.error('Failed to load current image:', imgErr);
+                    }
+                }
+
                 updateCharCounts();
                 editingPostId = postId;
 
@@ -482,23 +502,21 @@
             try {
                 let res;
 
+                // Always use FormData to support image upload
+                const formData = new FormData();
+                formData.append('title', title);
+                if (content) formData.append('content', content);
+                if (selectedFile) formData.append('image', selectedFile);
+
                 if (editingPostId) {
                     // Update existing post
                     res = await fetch(`${API_BASE_URL}/posts/${editingPostId}`, {
                         method: 'PUT',
-                        headers: {
-                            ...getAuthHeaders(),
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ title, content })
+                        headers: getAuthHeaders(),
+                        body: formData
                     });
                 } else {
-                    // Create new post with optional image
-                    const formData = new FormData();
-                    formData.append('title', title);
-                    if (content) formData.append('content', content);
-                    if (selectedFile) formData.append('image', selectedFile);
-
+                    // Create new post
                     res = await fetch(`${API_BASE_URL}/posts`, {
                         method: 'POST',
                         headers: getAuthHeaders(),

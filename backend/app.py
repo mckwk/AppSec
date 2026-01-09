@@ -435,15 +435,25 @@ def update_existing_post(post_id):
     if not user:
         return jsonify({'error': 'Authentication required'}), 401
     
-    data = request.json
-    if not data:
-        return jsonify({'error': 'Invalid request'}), 400
+    # Handle both JSON and FormData
+    if request.content_type and 'multipart/form-data' in request.content_type:
+        title = request.form.get('title')
+        content = request.form.get('content')
+        image_file = request.files.get('image')
+    else:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'Invalid request'}), 400
+        title = data.get('title')
+        content = data.get('content')
+        image_file = None
     
     success, result = update_post(
         user.id, post_id, 
-        title=data.get('title'),
-        content=data.get('content'),
-        is_admin=is_admin(user)
+        title=title,
+        content=content,
+        is_admin=is_admin(user),
+        image_file=image_file
     )
     
     if success:

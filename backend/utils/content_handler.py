@@ -237,7 +237,7 @@ def get_post_by_id(post_id, include_deleted=False):
     }
 
 
-def update_post(user_id, post_id, title=None, content=None, is_admin=False):
+def update_post(user_id, post_id, title=None, content=None, is_admin=False, image_file=None):
     """
     Update an existing post.
     
@@ -247,6 +247,7 @@ def update_post(user_id, post_id, title=None, content=None, is_admin=False):
         title: New title (optional)
         content: New content (optional)
         is_admin: Whether user is admin
+        image_file: New image file (optional)
     
     Returns:
         Tuple (success: bool, post_data or error: dict/str)
@@ -269,6 +270,13 @@ def update_post(user_id, post_id, title=None, content=None, is_admin=False):
     
     if content is not None:
         post.content = sanitize_content(content.strip()) if content else None
+    
+    # Handle image upload
+    if image_file:
+        from utils.upload_handler import save_image
+        image_path = save_image(image_file, 'posts')
+        if image_path:
+            post.image_path = image_path
     
     try:
         db.session.commit()
