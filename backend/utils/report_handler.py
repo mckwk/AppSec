@@ -197,21 +197,20 @@ def get_all_reports(status=None, page=1, per_page=20):
     }
 
 
-def review_report(admin_id, report_id, action, delete_content=False):
+def review_report(admin_id, report_id, action):
     """
     Review and act on a report.
     
     Args:
         admin_id: ID of the admin reviewing
         report_id: Report ID
-        action: 'approve' (take action) or 'dismiss'
-        delete_content: If True and action is 'approve', delete the reported content
+        action: 'approve' (delete content), 'reject' (mark reviewed but keep content), or 'dismiss'
     
     Returns:
         Tuple (success: bool, message: str)
     """
-    if action not in ['approve', 'dismiss', 'reviewed']:
-        return False, "Invalid action. Use 'approve' or 'dismiss'"
+    if action not in ['approve', 'reject', 'dismiss']:
+        return False, "Invalid action. Use 'approve', 'reject', or 'dismiss'"
     
     report = Report.query.filter(Report.id == report_id).first()
     
@@ -222,12 +221,17 @@ def review_report(admin_id, report_id, action, delete_content=False):
         return False, "Report has already been reviewed"
     
     try:
-        report.status = 'reviewed' if action == 'approve' else 'dismissed'
+        # Set status based on action
+        if action == 'dismiss':
+            report.status = 'dismissed'
+        else:
+            report.status = 'reviewed'
+        
         report.reviewed_at = datetime.utcnow()
         report.reviewed_by_id = admin_id
         
-        # Optionally delete the reported content
-        if action == 'approve' and delete_content:
+        # If approve, delete the reported content
+        if action == 'approve':
             if report.post_id:
                 post = Post.query.get(report.post_id)
                 if post and not post.is_deleted:
@@ -254,15 +258,17 @@ def review_report(admin_id, report_id, action, delete_content=False):
             resource_id=report.id,
             details={
                 'action': action,
-                'content_deleted': delete_content and action == 'approve'
+                'content_deleted': action == 'approve'
             }
         )
         
+        action_msg = {'approve': 'approved (content deleted)', 'reject': 'rejected', 'dismiss': 'dismissed'}
         logging.info(f"Report {report.id} reviewed by admin {admin_id}: {action}")
         
-        return True, f"Report {action}d successfully"
+        return True, f"Report {action_msg[action]} successfully"
         
     except Exception as e:
         db.session.rollback()
         logging.error(f"Failed to review report: {e}")
         return False, "Failed to review report"
+

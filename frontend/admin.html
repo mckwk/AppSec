@@ -768,9 +768,9 @@
                         <td>${formatDate(r.created_at)}</td>
                         <td>
                             ${r.status === 'pending' ? `
-                                <button class="btn btn-sm btn-success" onclick="reviewReport(${r.id}, 'approve', false)">Approve</button>
-                                <button class="btn btn-sm btn-danger" onclick="reviewReport(${r.id}, 'approve', true)">Approve & Delete</button>
-                                <button class="btn btn-sm btn-secondary" onclick="reviewReport(${r.id}, 'dismiss', false)">Dismiss</button>
+                                <button class="btn btn-sm btn-warning" onclick="reviewReport(${r.id}, 'reject')">Reject</button>
+                                <button class="btn btn-sm btn-danger" onclick="reviewReport(${r.id}, 'approve')">Approve & Delete</button>
+                                <button class="btn btn-sm btn-secondary" onclick="reviewReport(${r.id}, 'dismiss')">Dismiss</button>
                             ` : `<em>Reviewed</em>`}
                         </td>
                     </tr>
@@ -784,12 +784,12 @@
             }
         }
 
-        async function reviewReport(reportId, action, deleteContent) {
+        async function reviewReport(reportId, action) {
             try {
                 const res = await fetch(`${API_BASE_URL}/admin/reports/${reportId}`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({ action, delete_content: deleteContent })
+                    body: JSON.stringify({ action })
                 });
 
                 if (!res.ok) {

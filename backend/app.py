@@ -793,8 +793,7 @@ def admin_review_report(report_id):
     success, message = review_report(
         user.id, 
         report_id, 
-        data['action'],
-        delete_content=data.get('delete_content', False)
+        data['action']
     )
     
     if success:
