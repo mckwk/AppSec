@@ -201,7 +201,8 @@ def get_current_user_info():
             'id': user.id,
             'email': user.email,
             'is_active': user.is_active,
-            'mfa_enabled': user.mfa_enabled
+            'mfa_enabled': user.mfa_enabled,
+            'role': user.role
         }
     }), 200
 

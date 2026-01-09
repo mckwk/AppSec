@@ -5,7 +5,7 @@ Handles administrative operations on users and content.
 import logging
 from datetime import datetime
 from database import db
-from database.models import User, Post, Comment
+from database.models import User, Post, Comment, Report
 from utils.audit_handler import log_event, AuditActions
 
 
@@ -391,10 +391,6 @@ def get_platform_stats():
             'deleted': Comment.query.filter(Comment.is_deleted == True).count()
         },
         'reports': {
-            'pending': db.session.query(db.func.count()).select_from(
-                db.session.query(db.text("1")).from_statement(
-                    db.text("SELECT 1 FROM report WHERE status = 'pending'")
-                ).subquery()
-            ).scalar() or 0
+            'pending': Report.query.filter(Report.status == 'pending').count()
         }
     }
