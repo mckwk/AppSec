@@ -191,9 +191,6 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
-# PDF
-*.pdf
-
 # PyPI configuration file
 .pypirc
 
@@ -211,5 +208,6 @@ __marimo__/
 
 users.db
 
-
 *.jpg
+
+*.pdf
