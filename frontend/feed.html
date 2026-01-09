@@ -107,10 +107,12 @@
             display: flex;
             gap: 10px;
             margin-bottom: 25px;
+            align-items: center;
         }
 
         .search-bar input {
             flex: 1;
+            min-width: 0;
             max-width: 600px;
             padding: 12px 20px;
             border: 2px solid #ffb7c5;
@@ -122,6 +124,14 @@
 
         .search-bar input:focus {
             border-color: var(--primary-pink);
+        }
+
+        /* Override global button styles for search */
+        .search-bar .btn {
+            width: auto !important;
+            flex-shrink: 0;
+            padding: 12px 25px;
+            margin: 0;
         }
 
         /* Posts Grid */
@@ -477,7 +487,7 @@
                 postsGrid.innerHTML = data.posts.map(post => `
                     <article class="post-card">
                         ${post.image_path ?
-                        `<img src="${API_BASE_URL}/uploads/${post.image_path}" alt="${post.title}" class="post-image" onerror="this.style.display='none'">` :
+                        `<img src="${API_BASE_URL}/uploads/${post.image_path}?ngrok-skip-browser-warning=true" alt="${escapeHtml(post.title)}" class="post-image" onerror="this.style.display='none'">` :
                         '<div class="post-image" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">🖼️</div>'}
                         <div class="post-content">
                             <h2 class="post-title">
