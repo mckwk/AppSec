@@ -1,77 +1,113 @@
 # HelloKittyCMS
 
-HelloKittyCMS is a simple content management system built with Flask for the backend and vanilla JavaScript for the frontend. This project includes user registration, email activation, and a styled user interface.
+A secure content management platform developed as part of the Application Security course. 
 
+## Overview
 
-## Prerequisites
-
-- Python 3.8+
-- A MailerSend account for email services
-- ngrok to serve the API
-
-## Setup Instructions
-
-### Backend Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/mckwk/AppSec.git
-   cd AppSec/backend
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up the environment variables:**
-   - Copy the `.env` file and update the values as needed:
-     ```
-     SECRET_KEY=your_secret_key
-     MAILERSEND_API_KEY=your_mailersend_api_key
-     DATABASE_URI=sqlite:///path_to_your_database
-     ACTIVATION_SALT=email-activation
-     MAILERSEND_FROM_EMAIL=your_email@example.com
-     FLASK_DEBUG=True
-     ```
-
-5. **Run the application:**
-   ```bash
-   python app.py
-   ```
-   The application will be available at `http://127.0.0.1:5000/`.
-   To expose the API to the internet, you can use ngrok with command:
-    ```bash
-    ngrok http 5000
-    ``` 
-
-### Frontend Setup
-
-1. **Navigate to the frontend directory:**
-   ```bash
-   cd ../frontend
-   ```
-
-2. **Set up the frontend configuration:**
-   - Copy `config.js.example` to `config.js` and update the `API_BASE_URL`:
-     ```javascript
-     const CONFIG = {
-         API_BASE_URL: 'http://127.0.0.1:5000',
-     };
-     ```
-
-3. **Open `index.html` in a browser or deploy to vercel.**
+HelloKittyCMS is a web-based content management system implementing industry-standard security practices. The platform enables user registration with email verification, multi-factor authentication, content publishing with media uploads, and comprehensive administrative controls.
 
 ## Features
 
-- User registration with email activation
-- Styled frontend and backend templates
-- Secure password hashing with bcrypt
-- SQLite database for user data
+### Authentication and User Management
+- User registration with email-based account activation
+- Secure login with session management
+- Account lockout after failed authentication attempts
+- Time-based one-time password (TOTP) two-factor authentication
+- Password reset functionality via email
+
+### Content Management
+- Post creation with optional image attachments
+- Post editing and deletion (soft-delete)
+- Comment system with moderation support
+- Star-based rating system (1-5 scale)
+- Full-text search across posts
+
+### Administration
+- Role-based access control (User, Administrator)
+- User management (role assignment, ban, delete, restore)
+- Content moderation and report review
+- Deleted content restoration
+- Audit log viewer with filtering capabilities
+
+### Security Implementation
+- Cross-Site Scripting (XSS) prevention via HTML sanitization
+- SQL injection protection through parameterized queries
+- Secure file upload with content-based validation
+- Rate limiting on all API endpoints
+- Comprehensive audit logging
+
+## Technology Stack
+
+**Backend**
+- Python 3.8+
+- Flask web framework
+- SQLAlchemy ORM
+- Flask-Bcrypt for password hashing
+- Pillow for image processing
+
+**Frontend**
+- HTML5 / CSS3
+- Vanilla JavaScript
+- Responsive design
+
+## Installation
+
+### Prerequisites
+- Python 3.8 or higher
+- MailerSend account for email delivery
+- Google reCAPTCHA keys
+
+### Backend Setup
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Configure the environment variables in `.env`:
+
+| Variable | Description |
+|----------|-------------|
+| `SECRET_KEY` | Application secret key |
+| `DATABASE_URI` | Database connection string |
+| `MAILERSEND_API_KEY` | MailerSend API key |
+| `MAILERSEND_FROM_EMAIL` | Sender email address |
+| `RECAPTCHA_SECRET_KEY` | reCAPTCHA secret key |
+| `PEPPER` | Password hashing pepper |
+
+Start the application:
+
+```bash
+python app.py
+```
+
+### Frontend Setup
+
+```bash
+cd frontend
+cp config.js.example config.js
+```
+
+Update `API_BASE_URL` in `config.js` to point to your backend instance.
+
+## Project Structure
+
+```
+├── backend/
+│   ├── app.py                 # Application entry point
+│   ├── database/              # Database models
+│   ├── utils/                 # Business logic handlers
+│   ├── templates/             # Email templates
+│   └── uploads/               # User-uploaded files
+├── frontend/
+│   ├── index.html             # Registration
+│   ├── login.html             # Authentication
+│   ├── feed.html              # Content feed
+│   ├── admin.html             # Administration panel
+│   └── static/                # CSS and assets
+└── specifications/            # Technical documentation
+```
 
