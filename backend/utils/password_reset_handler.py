@@ -137,8 +137,26 @@ def render_email_template(template_name, **kwargs):
     return template.render(**kwargs)
 
 
+def is_email_configured():
+    """Check if MailerSend API key is configured."""
+    api_key = os.getenv('MAILERSEND_API_KEY', '')
+    return bool(api_key and api_key.strip())
+
+
 def send_password_reset_email(reset_link, email):
-    """Send password reset email. Prints link to console if email fails."""
+    """Send password reset email. Prints link to console if email is not configured or fails."""
+    
+    # Check if email is configured
+    if not is_email_configured():
+        logging.warning(f"MailerSend API key not configured. Skipping email send.")
+        print(f"\n{'='*60}")
+        print(f"PASSWORD RESET LINK (email not configured):")
+        print(f"Email: {email}")
+        print(f"{reset_link}")
+        print(f"{'='*60}\n")
+        logging.info(f"Password reset link printed to console for {email}: {reset_link}")
+        return
+    
     try:
         logging.info(f"Sending password reset email to: {email}")
         
@@ -159,6 +177,7 @@ def send_password_reset_email(reset_link, email):
         # Print the reset link to console for development/debugging
         print(f"\n{'='*60}")
         print(f"PASSWORD RESET LINK (email failed to send):")
+        print(f"Email: {email}")
         print(f"{reset_link}")
         print(f"{'='*60}\n")
-        logging.info(f"Password reset link printed to console: {reset_link}")
+        logging.info(f"Password reset link printed to console for {email}: {reset_link}")

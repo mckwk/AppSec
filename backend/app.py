@@ -899,11 +899,20 @@ def create_default_admin():
     logging.info(f"Created default admin user: {admin_email}")
 
 
+def init_database():
+    """Initialize database tables and create default admin user."""
+    logging.info("Initializing database tables...")
+    db.create_all()
+    logging.info("Database tables created successfully")
+    create_default_admin()
+
+
+# Initialize database when app is imported (for gunicorn/WSGI servers)
+with app.app_context():
+    init_database()
+
+
 if __name__ == '__main__':
-    with app.app_context():
-        logging.info("Creating database tables")
-        db.create_all()
-        create_default_admin()
     debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() in ['true', '1', 't']
     logging.info(
         f"Starting Flask app in {'debug' if debug_mode else 'production'} mode")

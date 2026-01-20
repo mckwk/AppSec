@@ -40,16 +40,40 @@ def generate_activation_link(email):
     logging.debug(f"Generated token: {token}")
     return token, url_for('activate_account', token=token, _external=True)
 
+def is_email_configured():
+    """Check if MailerSend API key is configured."""
+    api_key = os.getenv('MAILERSEND_API_KEY', '')
+    return bool(api_key and api_key.strip())
+
+
 def send_activation_email(activation_link, email="placeholder@email.com"):
+    """Send activation email. Prints link to console if email is not configured or fails."""
+    
+    # Check if email is configured
+    if not is_email_configured():
+        logging.warning(f"MailerSend API key not configured. Skipping email send.")
+        print(f"\n{'='*60}")
+        print(f"ACTIVATION LINK (email not configured):")
+        print(f"Email: {email}")
+        print(f"{activation_link}")
+        print(f"{'='*60}\n")
+        logging.info(f"Activation link printed to console for {email}: {activation_link}")
+        return
+    
     try:
         logging.info(f"Sending activation email to: {email}")
         email_content = build_email_content(activation_link, email)
         ms.emails.send(email_content)
         logging.info(f"Activation email successfully sent to {email}")
     except Exception as e:
-        logging.error(
-            f"Failed to send activation email to {email}: {e}, activation link: {activation_link}"
-        )
+        logging.error(f"Failed to send activation email to {email}: {e}")
+        # Print the activation link to console for development/debugging
+        print(f"\n{'='*60}")
+        print(f"ACTIVATION LINK (email failed to send):")
+        print(f"Email: {email}")
+        print(f"{activation_link}")
+        print(f"{'='*60}\n")
+        logging.info(f"Activation link printed to console for {email}: {activation_link}")
 
 def activate_user_account(token):
     try:

@@ -212,3 +212,14 @@ users.db
 
 *.pdf
 *.tex
+
+# Docker
+.docker/
+
+# Uploaded files (keep structure, ignore content)
+backend/uploads/**/*
+!backend/uploads/.gitkeep
+!backend/uploads/posts/.gitkeep
+
+# Frontend config (contains API URLs)
+frontend/config.js
