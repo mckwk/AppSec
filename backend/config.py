@@ -12,7 +12,9 @@ PEPPER = os.getenv('PEPPER', '')
 
 serializer = URLSafeTimedSerializer(SECRET_KEY)
 
-ms = MailerSendClient(api_key=os.getenv('MAILERSEND_API_KEY'))
+# Only initialize MailerSend client if API key is configured
+_mailersend_api_key = os.getenv('MAILERSEND_API_KEY', '')
+ms = MailerSendClient(api_key=_mailersend_api_key) if _mailersend_api_key else None
 
 template_loader = FileSystemLoader(searchpath="templates")
 template_env = Environment(loader=template_loader)

@@ -170,6 +170,8 @@ def send_password_reset_email(reset_link, email):
             .text(f"Click the link below to reset your password: {reset_link}")
             .build())
         
+        if ms is None:
+            raise RuntimeError("MailerSend client not initialized")
         ms.emails.send(email_content)
         logging.info(f"Password reset email successfully sent to {email}")
     except Exception as e:

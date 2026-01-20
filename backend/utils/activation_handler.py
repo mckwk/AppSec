@@ -63,6 +63,8 @@ def send_activation_email(activation_link, email="placeholder@email.com"):
     try:
         logging.info(f"Sending activation email to: {email}")
         email_content = build_email_content(activation_link, email)
+        if ms is None:
+            raise RuntimeError("MailerSend client not initialized")
         ms.emails.send(email_content)
         logging.info(f"Activation email successfully sent to {email}")
     except Exception as e:
